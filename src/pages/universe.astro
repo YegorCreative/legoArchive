@@ -1,0 +1,81 @@
+---
+import Base from "../layouts/Base.astro";
+import { decadeOf, largestSet, rootTheme, setsForRoot } from "../lib/catalog";
+import { galleryTitle } from "../lib/exhibits";
+import { formatCount } from "../lib/format";
+import { href } from "../lib/href";
+import { loadCatalog } from "../lib/load-catalog";
+
+const catalog = loadCatalog();
+const rows = new Map<string, { name: string; slug: string; count: number; year: number; decade: number; largestId: string; largestName: string }>();
+for (const set of catalog.sets) {
+  const root = rootTheme(set.themeId, catalog.themeById);
+  if (!root) continue;
+  const row = rows.get(root.id) ?? { name: root.name, slug: root.slug, count: 0, year: set.year, decade: decadeOf(set.year), largestId: "", largestName: "" };
+  row.count += 1;
+  if (set.year < row.year) {
+    row.year = set.year;
+    row.decade = decadeOf(set.year);
+  }
+  rows.set(root.id, row);
+}
+const ranked = [...rows.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 36);
+for (const row of ranked) {
+  const theme = catalog.themeBySlug.get(row.slug);
+  const sets = theme ? setsForRoot(catalog, theme.id) : [];
+  const big = largestSet(sets);
+  row.largestId = big?.id ?? "";
+  row.largestName = big?.name ?? "";
+}
+const decades = [...new Set(ranked.map((row) => row.decade))].sort((a, b) => a - b);
+const columns = decades.map((decade) => ranked.filter((row) => row.decade === decade));
+const width = Math.max(720, decades.length * 210);
+const height = Math.max(420, Math.max(...columns.map((column) => column.length)) * 54 + 80);
+---
+<Base title="Universe map" description="A map of major root themes placed by the earliest year they appear in the snapshot.">
+  <p class="eyebrow">Universe map</p>
+  <h1 class="lede">Follow a thread</h1>
+  <p class="deck">Each node is a root theme with many records in this snapshot, placed in the decade of its earliest record. Town and City are separate nodes. The map does not draw all {formatCount(catalog.sets.length)} sets. Drag the map to pan. Zoom with the buttons. Search filters both the map and the list. A theme name opens that theme. The largest set link uses recorded piece count, not fame.</p>
+  <div class="universe" data-universe>
+    <div class="universe-tools">
+      <button type="button" data-zoom-in>Zoom in</button>
+      <button type="button" data-zoom-out>Zoom out</button>
+      <button type="button" data-reset>Reset view</button>
+      <label>Find a theme <input data-universe-search type="search" placeholder="Star Wars" /></label>
+    </div>
+    <div class="universe-stage" data-universe-stage tabindex="0" aria-label="Theme map. Drag to pan. Arrow keys pan when this map is focused. Plus and minus zoom. Home resets. Theme links are also in the list below.">
+      <div data-universe-canvas>
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Root themes grouped by the decade of their earliest snapshot record.">
+          {columns.map((column, index) => {
+            const x = 28 + index * 210;
+            return (
+              <g>
+                <text x={x} y="28" class="map-label">{column[0] ? `${column[0].decade}s` : ""}</text>
+                {column.map((theme, row) => (
+                  <a href={href(`themes/${theme.slug}/`)} data-node={theme.name}>
+                    <title>{theme.name}</title>
+                    <rect x={x} y={48 + row * 54} width="180" height="42" rx="12" />
+                    <text x={x + 12} y={74 + row * 54}>{theme.name.length > 22 ? `${theme.name.slice(0, 20)}…` : theme.name}</text>
+                  </a>
+                ))}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    </div>
+    <h2>List of the same themes</h2>
+    <ul class="universe-list">
+      {ranked.map((theme) => (
+        <li data-node={theme.name}>
+          <a href={href(`decades/${theme.decade}/`)}>{theme.decade}s · {galleryTitle(theme.decade)}</a>
+          <span aria-hidden="true"> → </span>
+          <a href={href(`themes/${theme.slug}/`)}>{theme.name}</a>
+          <span class="quiet"> · earliest record {theme.year} · {formatCount(theme.count)} sets</span>
+          {theme.largestId && <span> · <a href={href(`sets/${theme.largestId}/`)}>largest recorded build: {theme.largestName}</a></span>}
+        </li>
+      ))}
+    </ul>
+    <p class="quiet">{rows.size - ranked.length} root themes are not drawn here. <a href={href("themes/")}>Browse the full theme index.</a></p>
+  </div>
+</Base>

@@ -1,0 +1,92 @@
+---
+import SetCard from "../../components/SetCard.astro";
+import Base from "../../layouts/Base.astro";
+import { decadeOf, rootTheme } from "../../lib/catalog";
+import { galleryTitle } from "../../lib/exhibits";
+import { formatCount } from "../../lib/format";
+import { href } from "../../lib/href";
+import { loadCatalog } from "../../lib/load-catalog";
+
+export function getStaticPaths() {
+  const catalog = loadCatalog();
+  const decades = new Set(catalog.years.map((year) => decadeOf(year)));
+  return [...decades].map((decade) => ({ params: { decade: String(decade) } }));
+}
+
+const catalog = loadCatalog();
+const decade = Number(Astro.params.decade);
+const sets = catalog.sets.filter((set) => decadeOf(set.year) === decade);
+const years = [...new Set(sets.map((set) => set.year))].sort((a, b) => a - b);
+const themeCounts = new Map<string, { name: string; slug: string; count: number }>();
+const firstYear = new Map<string, { name: string; slug: string; year: number }>();
+for (const set of catalog.sets) {
+  const root = rootTheme(set.themeId, catalog.themeById);
+  if (!root) continue;
+  const known = firstYear.get(root.id);
+  if (!known || set.year < known.year) firstYear.set(root.id, { name: root.name, slug: root.slug, year: set.year });
+}
+for (const set of sets) {
+  const root = rootTheme(set.themeId, catalog.themeById);
+  if (!root) continue;
+  const row = themeCounts.get(root.id) ?? { name: root.name, slug: root.slug, count: 0 };
+  row.count += 1;
+  themeCounts.set(root.id, row);
+}
+const themes = [...themeCounts.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+const firstHere = [...firstYear.values()].filter((theme) => decadeOf(theme.year) === decade).sort((a, b) => a.year - b.year || a.name.localeCompare(b.name));
+const largest = [...sets].filter((set) => set.parts != null).sort((a, b) => (b.parts ?? 0) - (a.parts ?? 0)).slice(0, 6);
+const pieces = sets.reduce((sum, set) => sum + (set.parts ?? 0), 0);
+const knownPieces = sets.filter((set) => set.parts != null).length;
+---
+<Base title={`${decade}s`} description={`Documented LEGO sets from the ${decade}s in the Rebrickable snapshot.`}>
+  <p class="eyebrow"><a href={href("timeline/")}>Timeline</a> · {decade}s</p>
+  <header class="decade-hero" data-decade={decade}>
+    <p class="quiet">Editorial gallery title, not a historical classification</p>
+    <h1 class="lede">{galleryTitle(decade)}</h1>
+    <p class="deck">{formatCount(sets.length)} sets in this snapshot are dated {years[0]} through {years[years.length - 1] ?? decade}. {formatCount(themes.length)} root themes appear among them. Town and City stay separate. These counts are not a certificate that every set released in the {decade}s is listed.</p>
+  </header>
+  <div class="stats">
+    <div class="stat"><b>{formatCount(sets.length)}</b><span>Documented sets</span></div>
+    <div class="stat"><b>{formatCount(themes.length)}</b><span>Root themes in these years</span></div>
+    <div class="stat"><b>{knownPieces ? formatCount(pieces) : "Unavailable"}</b><span>Pieces where a count is recorded</span></div>
+    <div class="stat"><b>{years.length}</b><span>Years with at least one record</span></div>
+  </div>
+  <section>
+    <h2>Years</h2>
+    <ol class="year-list">
+      {years.map((year) => <li><a href={href(`years/${year}/`)}>{year}</a></li>)}
+    </ol>
+  </section>
+  <section>
+    <h2>Root themes in this room</h2>
+    <p class="quiet">Ranked by how many snapshot records fall in these years. This is not a ranking of cultural importance.</p>
+    <div class="theme-mosaic">
+      {themes.slice(0, 12).map((theme) => (
+        <a class="theme-tile" href={href(`themes/${theme.slug}/`)}>
+          <h3>{theme.name}</h3>
+          <p>{formatCount(theme.count)} sets</p>
+        </a>
+      ))}
+    </div>
+    {themes.length > 12 && <p class="quiet">{themes.length - 12} more root themes have records in these years. The theme index lists them.</p>}
+  </section>
+  <section>
+    <h2>Earliest snapshot year falls here</h2>
+    <p class="quiet">These root themes have no earlier record in this file. That is not proof of the year the LEGO Group introduced them.</p>
+    {firstHere.length === 0 ? <p>None.</p> : (
+      <ul>
+        {firstHere.slice(0, 24).map((theme) => <li><a href={href(`themes/${theme.slug}/`)}>{theme.name}</a> · earliest record {theme.year}</li>)}
+      </ul>
+    )}
+  </section>
+  <section>
+    <h2>Largest recorded builds</h2>
+    <p class="quiet">Chosen by piece count in the snapshot. Sets without a piece count are excluded. This is not a list of the most famous sets.</p>
+    <div class="card-grid">
+      {largest.map((set) => {
+        const root = rootTheme(set.themeId, catalog.themeById);
+        return root ? <SetCard set={set} catalog={catalog} root={root} /> : null;
+      })}
+    </div>
+  </section>
+</Base>

@@ -37,39 +37,30 @@ const adjust = (price: PriceObservation | null) => {
 };
 const adjustedMsrp = adjust(original);
 const adjustedCatalog = adjust(mailOrder);
-const msrpInflation = !original
-  ? "Not calculated. There is no verified store MSRP to adjust."
-  : original.currency !== "USD"
-    ? "Not calculated. Purchasing-power adjustment is implemented for US dollars only."
-    : adjustedMsrp == null || comparisonYear == null
-      ? "Not calculated. The original year or the comparison year is missing from the stored CPI-U series."
-      : `${formatMoney(adjustedMsrp, "USD")} in ${comparisonYear} dollars. This measures purchasing power, not what a collector might pay.`;
-const catalogInflation = !mailOrder
-  ? "Not calculated. There is no verified catalog price to adjust."
-  : mailOrder.currency !== "USD"
-    ? "Not calculated. Purchasing-power adjustment is implemented for US dollars only."
-    : adjustedCatalog == null || comparisonYear == null
-      ? "Not calculated. The catalog year or the comparison year is missing from the stored CPI-U series."
-      : `${formatMoney(adjustedCatalog, "USD")} in ${comparisonYear} dollars. This is the purchasing power of the catalog price, not an inflation-adjusted MSRP and not a collectible value.`;
 const marketPoints = [marketNew, marketUsed, marketIncomplete, auction].filter((price) => price != null).length;
+const laterDollars = (amount: number | null) =>
+  amount != null && comparisonYear != null ? `${formatMoney(amount, "USD")} in ${comparisonYear} dollars` : "Not calculated";
 
 const groups = [
   { title: "Other catalog records with the same printed number", note: "These share a printed number in the source file. They are not automatically earlier or later models.", sets: related.variants, more: related.variantMore },
   { title: root ? `More ${root.name} sets from ${set.year}` : `More sets from ${set.year}`, note: null, sets: related.sameYear, more: 0 },
   { title: root ? `More from ${root.name}` : "More from this theme", note: null, sets: related.sameTheme, more: 0 },
   { title: theme && theme.id !== root?.id ? `More in ${theme.name}` : "Same subtheme", note: null, sets: related.sameSubtheme, more: 0 },
-];
+].filter((group) => group.sets.length > 0);
 ---
 <article class="set-page">
   <header class="set-hero">
     <figure class="shot">
-      <img class="set-img" src={imageUrl(catalog.snapshot, set.id)} alt={`${set.name}, set ${set.id}`} width="800" height="800" decoding="async" fetchpriority="high" />
+      <button type="button" class="shot-zoom" data-zoom={imageUrl(catalog.snapshot, set.id)} data-zoom-alt={`${set.name}, set ${set.id}. Catalog photograph, not a 3D model.`}>
+        <img class="set-img" src={imageUrl(catalog.snapshot, set.id)} alt={`${set.name}, set ${set.id}`} width="800" height="800" decoding="async" fetchpriority="high" />
+        <span class="shot-hint">View photograph</span>
+      </button>
     </figure>
     <div>
       <p class="eyebrow">{root?.name ?? "Theme unavailable"}{theme && theme.id !== root?.id ? ` · ${theme.name}` : ""}</p>
       <h1>{set.name}</h1>
       <p class="deck">Set {set.id} · {set.year}</p>
-      <p class="quiet">A historical essay for this individual set has not been written. Verified fields from the {catalog.snapshot.sourceName} snapshot are below. Missing fields stay unavailable.</p>
+      <p class="quiet">A historical essay for this individual set has not been written. Verified fields from the {catalog.snapshot.sourceName} snapshot are below. Missing fields stay unavailable. The photograph is the single catalog image. It is not a 3D model or another camera angle.</p>
     </div>
   </header>
 
@@ -93,90 +84,40 @@ const groups = [
 
   <section>
     <h2>Price information</h2>
-    <p class="notice">A Shop at Home catalog price is not a store MSRP. A marketplace asking price is not a completed sale. Inflation adjustment measures purchasing power, not collectible appreciation. Missing amounts stay unavailable.</p>
-    <div class="price-board">
-      <article class:list={["panel", "price-card", { "is-empty": !original }]}>
-        <p class="eyebrow">Original retail price</p>
-        <p class="amount">{original ? formatMoney(original.amount, original.currency) : "Unavailable"}</p>
-        <p>{original ? `${original.priceClass === "launch-retail" ? "Documented launch retail price" : "Manufacturer’s suggested retail price"} · ${original.market}` : "No verified store MSRP or launch retail price is stored for this set."}</p>
-      </article>
-      <article class:list={["panel", "price-card", { "is-empty": !mailOrder }]}>
-        <p class="eyebrow">Shop at Home catalog price</p>
-        <p class="amount">{mailOrder ? formatMoney(mailOrder.amount, mailOrder.currency) : "Unavailable"}</p>
-        <p>{mailOrder ? `${mailOrder.market} · includes the shipping stated by that catalog · not a store shelf price` : "No verified mail-order catalog price is stored for this set."}</p>
-      </article>
-      <article class:list={["panel", "price-card", { "is-empty": !currentShop }]}>
-        <p class="eyebrow">Current LEGO shop price</p>
-        <p class="amount">{currentShop ? formatMoney(currentShop.amount, currentShop.currency) : "Unavailable"}</p>
-        <p>{currentShop ? currentShop.market : "A price on today’s LEGO shop is not the original retail price, and none is stored here."}</p>
-      </article>
-      <article class:list={["panel", "price-card", { "is-empty": !marketNew }]}>
-        <p class="eyebrow">Current sealed value</p>
-        <p class="amount">{marketNew ? formatMoney(marketNew.amount, marketNew.currency) : "Unavailable"}</p>
-        <p>New, sealed. {marketNew ? "Verified market observation." : "No licensed sealed-market estimate has been retrieved."}</p>
-      </article>
-      <article class:list={["panel", "price-card", { "is-empty": !marketUsed }]}>
-        <p class="eyebrow">Current used value</p>
-        <p class="amount">{marketUsed ? formatMoney(marketUsed.amount, marketUsed.currency) : "Unavailable"}</p>
-        <p>Used, complete. {marketUsed ? "Verified market observation." : "No licensed used-market estimate has been retrieved."}</p>
-      </article>
-      <article class:list={["panel", "price-card", { "is-empty": !marketIncomplete }]}>
-        <p class="eyebrow">Used, incomplete</p>
-        <p class="amount">{marketIncomplete ? formatMoney(marketIncomplete.amount, marketIncomplete.currency) : "Unavailable"}</p>
-        <p>Kept separate from a complete used set.</p>
-      </article>
-      <article class:list={["panel", "price-card", { "is-empty": !auction }]}>
-        <p class="eyebrow">Verified auction sale</p>
-        <p class="amount">{auction ? formatMoney(auction.amount, auction.currency) : "Unavailable"}</p>
-        <p>{auction ? `${auction.condition} · ${auction.market} · ${auction.date}. One completed sale is not an average.` : "One completed sale is not an average, and none is stored for this set."}</p>
-      </article>
-      <article class="panel price-card">
-        <p class="eyebrow">Inflation-adjusted original price</p>
-        <p class="amount">{original && adjustedMsrp != null && comparisonYear != null ? formatMoney(adjustedMsrp, "USD") : "Not calculated"}</p>
-        <p>{msrpInflation}{comparisonYear != null && original && adjustedMsrp != null ? ` Comparison year: ${comparisonYear}.` : ""}</p>
-      </article>
-      <article class="panel price-card">
-        <p class="eyebrow">Catalog price in later dollars</p>
-        <p class="amount">{mailOrder && adjustedCatalog != null && comparisonYear != null ? formatMoney(adjustedCatalog, "USD") : "Not calculated"}</p>
-        <p>{catalogInflation}{comparisonYear != null && mailOrder && adjustedCatalog != null ? ` Comparison year: ${comparisonYear}.` : ""}</p>
-      </article>
-      <article class="panel price-card">
-        <p class="eyebrow">Value change</p>
-        <p class="amount">{formatPercent(change)}</p>
-        <p>{change == null ? "Appreciation needs a verified store MSRP and a later verified market observation in the same currency and market. A Shop at Home price is not used. This is not a prediction that the set will gain value." : "The percentage compares a verified store price with a later verified market observation. It is not a forecast."}</p>
-      </article>
-    </div>
-    <dl class="facts" style="margin-top: 1rem;">
-      <div><dt>Store MSRP per piece</dt><dd>{original ? formatMoney(pricePerPiece(original.amount, set.parts), original.currency) : "Unavailable"}</dd></div>
+    <dl class="facts">
+      <div><dt>Original retail price</dt><dd>{original ? formatMoney(original.amount, original.currency) : "Unavailable"}</dd></div>
+      <div><dt>Shop at Home catalog price</dt><dd>{mailOrder ? formatMoney(mailOrder.amount, mailOrder.currency) : "Unavailable"}</dd></div>
+      <div><dt>Current LEGO shop price</dt><dd>{currentShop ? formatMoney(currentShop.amount, currentShop.currency) : "Unavailable"}</dd></div>
+      <div><dt>Current sealed value</dt><dd>{marketNew ? formatMoney(marketNew.amount, marketNew.currency) : "Unavailable"}</dd></div>
+      <div><dt>Current used value</dt><dd>{marketUsed ? formatMoney(marketUsed.amount, marketUsed.currency) : "Unavailable"}</dd></div>
+      <div><dt>Used, incomplete</dt><dd>{marketIncomplete ? formatMoney(marketIncomplete.amount, marketIncomplete.currency) : "Unavailable"}</dd></div>
+      <div><dt>Verified auction sale</dt><dd>{auction ? formatMoney(auction.amount, auction.currency) : "Unavailable"}</dd></div>
+      <div><dt>Inflation-adjusted original price</dt><dd>{laterDollars(original ? adjustedMsrp : null)}</dd></div>
+      <div><dt>Catalog price in later dollars</dt><dd>{laterDollars(mailOrder ? adjustedCatalog : null)}</dd></div>
+      <div><dt>Value change</dt><dd>{formatPercent(change)}</dd></div>
       <div><dt>Catalog price per piece</dt><dd>{mailOrder ? formatMoney(pricePerPiece(mailOrder.amount, set.parts), mailOrder.currency) : "Unavailable"}</dd></div>
-      <div><dt>Sealed estimate per piece</dt><dd>{marketNew ? formatMoney(pricePerPiece(marketNew.amount, set.parts), marketNew.currency) : "Unavailable"}</dd></div>
-      <div><dt>Piece count used</dt><dd>{set.parts == null ? "Unavailable" : formatCount(set.parts)}</dd></div>
     </dl>
+    <p class="quiet">Shop at Home prices include the shipping stated by that catalog and are not store MSRP. Inflation is purchasing power, not collectible appreciation. {marketPoints >= 2 ? "Comparable dated market observations are available." : "A market-value chart is withheld."}</p>
     {mailOrder && (
-      <div class="panel" style="margin-top: 1rem;">
-        <h3>Catalog price source</h3>
+      <details class="panel source-fold">
+        <summary>Catalog price source</summary>
         <dl class="facts">
           <div><dt>Amount</dt><dd>{formatMoney(mailOrder.amount, mailOrder.currency)}</dd></div>
           <div><dt>Currency</dt><dd>{mailOrder.currency}</dd></div>
           <div><dt>Market</dt><dd>{mailOrder.market}</dd></div>
-          <div><dt>Condition</dt><dd>Not applicable. This is a catalog price, not a used or sealed grade.</dd></div>
+          <div><dt>Condition</dt><dd>Not a used or sealed grade</dd></div>
           <div><dt>Observation date</dt><dd>{mailOrder.date}</dd></div>
           <div><dt>Verified</dt><dd>{mailOrder.verifiedAt}</dd></div>
-          <div><dt>Status</dt><dd>{mailOrder.verification}</dd></div>
           <div><dt>Source</dt><dd><a href={mailOrder.sourceUrl}>{mailOrder.source}</a></dd></div>
         </dl>
-        {mailOrder.note && <p style="margin-top: 0.8rem;">{mailOrder.note}</p>}
-      </div>
+        {mailOrder.note && <p>{mailOrder.note}</p>}
+      </details>
     )}
-    <div class="panel" style="margin-top: 1rem;">
-      <h3>Price history</h3>
-      {marketPoints >= 2 ? <p>Comparable dated market observations are available.</p> : <p>A market-value chart is withheld. An original or catalog price is not the start of a resale history, and missing years are not filled in.</p>}
-    </div>
   </section>
 
   <section>
     <h2>Related sets</h2>
-    {groups.map((group) => (
+    {groups.length === 0 ? <p>None in this snapshot.</p> : groups.map((group) => (
       <div class="panel" style="margin-bottom: 0.8rem;">
         <h3>{group.title}</h3>
         {group.note && <p class="quiet">{group.note}</p>}

@@ -40,6 +40,7 @@ const canonical = new URL(path, Astro.site);
           <a href={href("themes/")} aria-current={current("themes/") ? "page" : undefined}>Themes</a>
           <a href={href("search/")} aria-current={current("search/") ? "page" : undefined}>Search</a>
           <a href={href("price-archive/")} aria-current={current("price-archive/") ? "page" : undefined}>Price archive</a>
+          <a href={href("timeline/")} aria-current={current("timeline/") ? "page" : undefined}>Timeline</a>
           <a href={href("stories/")} aria-current={current("stories/") ? "page" : undefined}>Stories</a>
           <a href={href("brick-legends/")} aria-current={path.includes("/brick-legends/") ? "page" : undefined}>Brick Legends</a>
           <a href={href("about/")} aria-current={current("about/") ? "page" : undefined}>About</a>
@@ -74,12 +75,6 @@ const canonical = new URL(path, Astro.site);
         <a href="https://github.com/YegorCreative/legoArchive">GitHub</a>
       </nav>
     </footer>
-    <script>
-      document.addEventListener("error", (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLImageElement) || !target.classList.contains("set-img")) return;
-        target.closest(".shot")?.classList.add("is-missing");
-      }, true);
-    </script>
+    <script src={href("museum.js")} defer></script>
   </body>
 </html>

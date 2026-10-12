@@ -1,7 +1,7 @@
 ---
 import SetCard from "../../components/SetCard.astro";
 import Base from "../../layouts/Base.astro";
-import { directChildren, largestSet, rootTheme, setsForRoot } from "../../lib/catalog";
+import { decadeOf, directChildren, largestSet, rootTheme, setsForRoot } from "../../lib/catalog";
 import { formatCount } from "../../lib/format";
 import { href } from "../../lib/href";
 import { coverageLabel, pricedRows } from "../../lib/price-coverage";
@@ -45,9 +45,12 @@ const marketCount = sealed.length + used.length + pricedRows(covered, "market-in
 ---
 <Base title={theme.name} description={`${theme.name} in the LEGO Archive snapshot.`}>
   <p class="eyebrow">{parent ? <a href={href(`themes/${parent.slug}/`)}>{parent.name}</a> : "Root theme"}</p>
-  <h1 class="lede">{theme.name}</h1>
-  <p class="notice">No curated historical essay is published for this theme yet, except where a story is linked. The facts below are counted from the Rebrickable snapshot of {catalog.snapshot.retrievedAt.slice(0, 10)}.</p>
+  <header class="theme-hero">
+    <h1 class="lede">{theme.name}</h1>
+    <p class="notice">No curated historical essay is published for this theme yet, except where a story is linked. The facts below are counted from the Rebrickable snapshot of {catalog.snapshot.retrievedAt.slice(0, 10)}. This page does not merge this theme with any other root theme.</p>
+  </header>
   {theme.slug === "star-wars" && <p><a href={href("stories/beginning-of-lego-star-wars/")}>Read the sourced 1999 Star Wars note.</a></p>}
+  {years[0] != null && <p><a href={href(`decades/${decadeOf(years[0])}/`)}>Open the {decadeOf(years[0])}s room</a> · <a href={href("universe/")}>Open the universe map</a></p>}
   <div class="stats">
     <div class="stat"><b>{formatCount(sets.length)}</b><span>{isRoot ? "Sets under this root theme" : "Sets filed directly here"}</span></div>
     <div class="stat"><b>{years[0] ?? "Unavailable"}</b><span>Earliest year in the snapshot</span></div>
@@ -83,8 +86,11 @@ const marketCount = sealed.length + used.length + pricedRows(covered, "market-in
   )}
   <section>
     <h2>Largest sets by recorded piece count</h2>
-    <div class="card-grid">
-      {largest.map((set) => <SetCard set={set} catalog={catalog} root={notableRoot} />)}
+    <div class="gallery-lead">
+      {largest[0] && <SetCard set={largest[0]} catalog={catalog} root={notableRoot} />}
+      <div class="card-grid">
+        {largest.slice(1).map((set) => <SetCard set={set} catalog={catalog} root={notableRoot} />)}
+      </div>
     </div>
     <p><a href={href(`search/?theme=${isRoot ? theme.slug : notableRoot.slug}`)}>Search the rest of this theme</a></p>
   </section>

@@ -1,0 +1,46 @@
+---
+import Base from "../layouts/Base.astro";
+import { decadeOf, rootTheme } from "../lib/catalog";
+import { galleryTitle } from "../lib/exhibits";
+import { formatCount } from "../lib/format";
+import { href } from "../lib/href";
+import { loadCatalog } from "../lib/load-catalog";
+
+const catalog = loadCatalog();
+const groups = new Map<number, { years: number[]; sets: number; themes: Set<string> }>();
+for (const year of catalog.years) {
+  const decade = decadeOf(year);
+  const group = groups.get(decade) ?? { years: [], sets: 0, themes: new Set<string>() };
+  group.years.push(year);
+  groups.set(decade, group);
+}
+for (const set of catalog.sets) {
+  const decade = decadeOf(set.year);
+  const group = groups.get(decade);
+  if (!group) continue;
+  group.sets += 1;
+  const root = rootTheme(set.themeId, catalog.themeById);
+  if (root) group.themes.add(root.id);
+}
+const decades = [...groups.entries()].sort((a, b) => a[0] - b[0]);
+---
+<Base title="Timeline" description="Scroll through the years in the LEGO Archive snapshot, from the earliest catalog year to the latest.">
+  <p class="eyebrow">Museum timeline</p>
+  <h1 class="lede">Travel the catalog</h1>
+  <p class="deck">This timeline lists every year in the {catalog.snapshot.retrievedAt.slice(0, 10)} snapshot, from {catalog.years[0]} through {catalog.years[catalog.years.length - 1]}. Gallery titles such as “New worlds” are editorial labels, not historical classifications. Scroll sideways, or use the arrow keys while this track is focused. The page itself still scrolls normally.</p>
+  <div class="exhibit-track" data-timeline tabindex="0" aria-label="Decades in the snapshot">
+    {decades.map(([decade, group]) => (
+      <article class="exhibit-stop">
+        <p class="eyebrow">{decade}s</p>
+        <h2>{galleryTitle(decade)}</h2>
+        <p class="quiet">Editorial gallery title.</p>
+        <p>{formatCount(group.sets)} documented sets · {formatCount(group.themes.size)} root themes</p>
+        <p><a href={href(`decades/${decade}/`)}>Enter the {decade}s room</a></p>
+        <ol class="year-list">
+          {group.years.map((year) => <li><a href={href(`years/${year}/`)}>{year}</a></li>)}
+        </ol>
+      </article>
+    ))}
+  </div>
+  <p><a href={href("universe/")}>Open the universe map</a> · <a href={href("years/")}>Open the year index</a></p>
+</Base>
