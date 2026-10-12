@@ -1,0 +1,34 @@
+---
+import SetCard from "../../../components/SetCard.astro";
+import Base from "../../../layouts/Base.astro";
+import { groupByRootTheme, rootTheme, setsInYear } from "../../../lib/catalog";
+import { href } from "../../../lib/href";
+import { loadCatalog } from "../../../lib/load-catalog";
+
+export function getStaticPaths() {
+  const catalog = loadCatalog();
+  const pairs = new Map<string, { year: string; theme: string }>();
+  for (const set of catalog.sets) {
+    const theme = rootTheme(set.themeId, catalog.themeById);
+    if (!theme) continue;
+    pairs.set(`${set.year}/${theme.slug}`, { year: String(set.year), theme: theme.slug });
+  }
+  return [...pairs.values()].map((params) => ({ params }));
+}
+
+const catalog = loadCatalog();
+const year = Number(Astro.params.year);
+const theme = catalog.themeBySlug.get(Astro.params.theme ?? "");
+const sets = theme
+  ? setsInYear(catalog, year).filter((set) => rootTheme(set.themeId, catalog.themeById)?.id === theme.id)
+  : [];
+if (!theme) throw new Error("Missing theme");
+---
+<Base title={`${theme.name} in ${year}`} description={`${theme.name} sets recorded for ${year}.`}>
+  <p class="eyebrow"><a href={href(`years/${year}/`)}>{year}</a> · <a href={href(`themes/${theme.slug}/`)}>{theme.name}</a></p>
+  <h1 class="lede">{theme.name} in {year}</h1>
+  <p class="deck">{sets.length} sets in this snapshot whose Rebrickable root theme is {theme.name}. The same records are listed on the {year} year page.</p>
+  <div class="card-grid">
+    {sets.map((set) => <SetCard set={set} catalog={catalog} root={theme} />)}
+  </div>
+</Base>

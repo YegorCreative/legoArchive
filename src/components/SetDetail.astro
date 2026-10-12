@@ -1,0 +1,100 @@
+---
+import prices from "../data/prices.json";
+import {
+  imageUrl,
+  printedNumber,
+  relatedSets,
+  rootTheme,
+  type LoadedCatalog,
+  type SetRecord,
+} from "../lib/catalog";
+import { formatCount } from "../lib/format";
+import { href } from "../lib/href";
+import { formatMoney, formatPercent, percentChange, pricePerPiece, type PriceObservation } from "../lib/pricing";
+
+interface Props {
+  catalog: LoadedCatalog;
+  set: SetRecord;
+}
+const { catalog, set } = Astro.props;
+const theme = catalog.themeById.get(set.themeId) ?? null;
+const root = rootTheme(set.themeId, catalog.themeById);
+const related = relatedSets(catalog, set);
+const observations = (prices as PriceObservation[]).filter((price) => price.setId === set.id);
+const original = observations.find((price) => price.kind === "original-retail") ?? null;
+const marketNew = observations.find((price) => price.kind === "market-new") ?? null;
+const marketUsed = observations.find((price) => price.kind === "market-used") ?? null;
+const change = percentChange(original?.amount ?? null, marketNew?.amount ?? null);
+const datedPoints = observations.filter((price) => price.date).length;
+
+const groups = [
+  { title: "Other catalog records with the same printed number", note: "These share a printed number in the source file. They are not automatically earlier or later models.", sets: related.variants },
+  { title: root ? `More ${root.name} sets from ${set.year}` : `More sets from ${set.year}`, note: null, sets: related.sameYear },
+  { title: root ? `More from ${root.name}` : "More from this theme", note: null, sets: related.sameTheme },
+  { title: theme && theme.id !== root?.id ? `More in ${theme.name}` : "Same subtheme", note: null, sets: related.sameSubtheme },
+];
+---
+<article class="set-page">
+  <header class="set-hero">
+    <figure class="shot">
+      <img class="set-img" src={imageUrl(catalog.snapshot, set.id)} alt={`${set.name}, set ${set.id}`} width="800" height="800" decoding="async" />
+    </figure>
+    <div>
+      <p class="eyebrow">{root?.name ?? "Theme unavailable"}{theme && theme.id !== root?.id ? ` · ${theme.name}` : ""}</p>
+      <h1>{set.name}</h1>
+      <p class="deck">Set {set.id} · {set.year}</p>
+      <p class="quiet">A historical essay for this individual set has not been written. Verified fields from the {catalog.snapshot.sourceName} snapshot are below. Missing fields stay unavailable.</p>
+    </div>
+  </header>
+
+  <section>
+    <h2>General information</h2>
+    <dl class="facts">
+      <div><dt>Set name</dt><dd>{set.name}</dd></div>
+      <div><dt>Catalog number</dt><dd>{set.id}</dd></div>
+      <div><dt>Printed number</dt><dd>{printedNumber(set.id)}</dd></div>
+      <div><dt>Theme</dt><dd>{root ? <a href={href(`themes/${root.slug}/`)}>{root.name}</a> : "Unavailable"}</dd></div>
+      <div><dt>Subtheme</dt><dd>{theme && theme.id !== root?.id ? theme.name : "Same as theme, or not separately recorded"}</dd></div>
+      <div><dt>Release year</dt><dd><a href={href(`years/${set.year}/`)}>{set.year}</a></dd></div>
+      <div><dt>Exact release date</dt><dd>Unavailable</dd></div>
+      <div><dt>Retirement year</dt><dd>Unavailable</dd></div>
+      <div><dt>Piece count</dt><dd>{set.parts == null ? "Unavailable" : formatCount(set.parts)}</dd></div>
+      <div><dt>Minifigure count</dt><dd>Unavailable</dd></div>
+      <div><dt>Recommended age</dt><dd>Unavailable</dd></div>
+      <div><dt>Source</dt><dd><a href={catalog.snapshot.sourceUrl}>Rebrickable downloads</a></dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Price information</h2>
+    <p class="notice">Estimated values are not guaranteed selling prices. No percentage is calculated unless both the original price and the comparison price are present. Currency is shown with each figure.</p>
+    <dl class="facts">
+      <div><dt>Original retail price</dt><dd>{original ? `${formatMoney(original.amount, original.currency)} · ${original.market ?? "Market not recorded"} · ${original.source} · ${original.verification}` : "Unavailable"}</dd></div>
+      <div><dt>Current estimated new or sealed value</dt><dd>{marketNew ? `${formatMoney(marketNew.amount, marketNew.currency)} · ${marketNew.date ?? "Date not recorded"} · ${marketNew.source} · ${marketNew.verification}` : "Unavailable"}</dd></div>
+      <div><dt>Current estimated used value</dt><dd>{marketUsed ? `${formatMoney(marketUsed.amount, marketUsed.currency)} · ${marketUsed.source}` : "Unavailable"}</dd></div>
+      <div><dt>Inflation-adjusted original price</dt><dd>Not calculated. There is no verified original price to adjust.</dd></div>
+      <div><dt>Change in value</dt><dd>{formatPercent(change)}</dd></div>
+      <div><dt>Original price per piece</dt><dd>{original ? formatMoney(pricePerPiece(original.amount, set.parts), original.currency) : "Unavailable"}</dd></div>
+      <div><dt>Current estimated price per piece</dt><dd>{marketNew ? formatMoney(pricePerPiece(marketNew.amount, set.parts), marketNew.currency) : "Unavailable"}</dd></div>
+    </dl>
+    <div class="panel" style="margin-top: 1rem;">
+      <h3>Price history</h3>
+      {datedPoints >= 2 ? <p>Dated observations are available.</p> : <p>A price-history line is withheld. This set does not have two dated price observations. A single missing middle is not filled in.</p>}
+    </div>
+  </section>
+
+  <section>
+    <h2>Related sets</h2>
+    {groups.map((group) => (
+      <div class="panel" style="margin-bottom: 0.8rem;">
+        <h3>{group.title}</h3>
+        {group.note && <p class="quiet">{group.note}</p>}
+        {group.sets.length === 0 ? <p>None in this snapshot.</p> : (
+          <ul>
+            {group.sets.map((item) => <li><a href={href(`sets/${item.id}/`)}>{item.name}</a> · {item.id} · {item.year}</li>)}
+          </ul>
+        )}
+      </div>
+    ))}
+  </section>
+</article>

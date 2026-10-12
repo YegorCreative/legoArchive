@@ -1,0 +1,76 @@
+---
+import SetCard from "../../components/SetCard.astro";
+import Base from "../../layouts/Base.astro";
+import { directChildren, largestSet, rootTheme, setsForRoot } from "../../lib/catalog";
+import { formatCount } from "../../lib/format";
+import { href } from "../../lib/href";
+import { loadCatalog } from "../../lib/load-catalog";
+
+export function getStaticPaths() {
+  const catalog = loadCatalog();
+  const used = new Set<string>();
+  for (const set of catalog.sets) {
+    let cursor = catalog.themeById.get(set.themeId);
+    const seen = new Set<string>();
+    while (cursor && !seen.has(cursor.id)) {
+      seen.add(cursor.id);
+      used.add(cursor.id);
+      cursor = cursor.parentId ? catalog.themeById.get(cursor.parentId) : undefined;
+    }
+  }
+  return [...used].map((id) => ({ params: { theme: catalog.themeById.get(id)?.slug } })).filter((entry) => entry.params.theme);
+}
+
+const catalog = loadCatalog();
+const theme = catalog.themeBySlug.get(Astro.params.theme ?? "");
+if (!theme) throw new Error("Missing theme");
+const isRoot = theme.parentId == null;
+const sets = isRoot
+  ? setsForRoot(catalog, theme.id)
+  : catalog.sets.filter((set) => set.themeId === theme.id);
+const years = [...new Set(sets.map((set) => set.year))].sort((a, b) => a - b);
+const yearCounts = years.map((year) => ({ year, count: sets.filter((set) => set.year === year).length }));
+const largest = [...sets].filter((set) => set.parts != null).sort((a, b) => (b.parts ?? 0) - (a.parts ?? 0)).slice(0, 6);
+const children = directChildren(catalog, theme.id);
+const notableRoot = isRoot ? theme : rootTheme(theme.id, catalog.themeById) ?? theme;
+const parent = theme.parentId ? catalog.themeById.get(theme.parentId) : null;
+---
+<Base title={theme.name} description={`${theme.name} in the LEGO Archive snapshot.`}>
+  <p class="eyebrow">{parent ? <a href={href(`themes/${parent.slug}/`)}>{parent.name}</a> : "Root theme"}</p>
+  <h1 class="lede">{theme.name}</h1>
+  <p class="notice">No curated historical essay is published for this theme yet, except where a story is linked. The facts below are counted from the Rebrickable snapshot of {catalog.snapshot.retrievedAt.slice(0, 10)}.</p>
+  {theme.slug === "star-wars" && <p><a href={href("stories/beginning-of-lego-star-wars/")}>Read the sourced 1999 Star Wars note.</a></p>}
+  <div class="stats">
+    <div class="stat"><b>{formatCount(sets.length)}</b><span>{isRoot ? "Sets under this root theme" : "Sets filed directly here"}</span></div>
+    <div class="stat"><b>{years[0] ?? "Unavailable"}</b><span>Earliest year in the snapshot</span></div>
+    <div class="stat"><b>{years[years.length - 1] ?? "Unavailable"}</b><span>Most recent year in the snapshot</span></div>
+    <div class="stat"><b>{largestSet(sets)?.parts ? formatCount(largestSet(sets)?.parts ?? null) : "Unavailable"}</b><span>Largest recorded piece count</span></div>
+  </div>
+  <section>
+    <h2>Years</h2>
+    <div class="year-list">
+      {yearCounts.map((entry) => (
+        <a href={isRoot ? href(`years/${entry.year}/${theme.slug}/`) : href(`years/${entry.year}/`)}>{entry.year} · {entry.count}</a>
+      ))}
+    </div>
+  </section>
+  {children.length > 0 && (
+    <section>
+      <h2>Subthemes in the dataset</h2>
+      <div class="theme-grid">
+        {children.map((child) => (
+          <a class="theme-tile" href={href(`themes/${child.slug}/`)}>
+            <h3>{child.name}</h3>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+  <section>
+    <h2>Largest sets by recorded piece count</h2>
+    <div class="card-grid">
+      {largest.map((set) => <SetCard set={set} catalog={catalog} root={notableRoot} />)}
+    </div>
+    <p><a href={href(`search/?theme=${isRoot ? theme.slug : notableRoot.slug}`)}>Search the rest of this theme</a></p>
+  </section>
+</Base>

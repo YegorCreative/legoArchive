@@ -1,0 +1,13 @@
+---
+import YearTrack from "../../components/YearTrack.astro";
+import Base from "../../layouts/Base.astro";
+import { loadCatalog } from "../../lib/load-catalog";
+
+const catalog = loadCatalog();
+---
+<Base title="Years" description="Browse documented LEGO sets by release year.">
+  <p class="eyebrow">Chronology</p>
+  <h1 class="lede">LEGO by year</h1>
+  <p class="deck">Every year present in the {catalog.snapshot.retrievedAt.slice(0, 10)} Rebrickable snapshot, from {catalog.years[0]} through {catalog.years[catalog.years.length - 1]}. Choosing a year opens the sets recorded for that year, grouped by the dataset’s root themes.</p>
+  <YearTrack years={catalog.years} />
+</Base>

@@ -1,0 +1,28 @@
+---
+import { renderCardFront, type CardCopy } from "../lib/character-svg";
+import type { DemoCharacter } from "../data/legends-demo";
+
+interface Props {
+  character: DemoCharacter;
+}
+const { character } = Astro.props;
+const copy: CardCopy = {
+  idLabel: character.id,
+  name: character.name,
+  creator: character.creator,
+  year: character.year,
+  rarity: character.rarity,
+  overall: character.overall,
+  power: character.stats.power,
+  creativity: character.stats.creativity,
+  defense: character.stats.defense,
+  bio: character.bio,
+  abilities: character.abilities,
+  banner: "DEMONSTRATION · NOT A PHYSICAL CARD",
+};
+const svg = renderCardFront(character.appearance, copy, character.id.replace(/[^a-z0-9]/gi, ""));
+---
+<figure class:list={["card-stage", { holo: character.rarity === "Epic" || character.rarity === "Legendary" || character.rarity === "Mythic" }]}>
+  <Fragment set:html={svg} />
+  <figcaption class="quiet">{character.name} · fictional overall {character.overall} · {character.rarity}</figcaption>
+</figure>

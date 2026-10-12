@@ -1,0 +1,10 @@
+---
+import SetExplorer from "../components/SetExplorer.astro";
+import Base from "../layouts/Base.astro";
+import { href } from "../lib/href";
+---
+<Base title="Not found" description="That page is not in LEGO Archive.">
+  <h1 class="lede">Page not found</h1>
+  <p class="deck">If this address is a set number, the catalog index below will open it. Otherwise, start from the <a href={href("years/")}>years</a> or <a href={href("search/")}>search</a>.</p>
+  <SetExplorer />
+</Base>

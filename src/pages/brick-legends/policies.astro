@@ -1,0 +1,24 @@
+---
+import Base from "../../layouts/Base.astro";
+---
+<Base title="Brick Legends policies" description="Draft requirements before Brick Legends can accept public work or hold an auction." section="legends">
+  <article class="prose">
+    <p class="eyebrow">Not yet in effect</p>
+    <h1 class="lede">Before anyone can enter</h1>
+    <p>Public submissions, accounts, votes, and auctions are closed. The notes below are requirements for a later release. They are not a contract, and using the local creator does not grant the site a license to your draft.</p>
+    <h2>Creator rights</h2>
+    <p>A future submission flow has to say, in plain language, that the creator keeps ownership and grants a specific license only if a design is selected for a physical card. The license would need to cover manufacturing, displaying, and selling that one edition. Unselected drafts would not be swept into a commercial license.</p>
+    <h2>Eligibility and originality</h2>
+    <p>Entrants would need an age rule, a ban on copying another person’s art, and a ban on using the LEGO Group’s logos, minifigure designs, or other protected characters. Brick Legends art has to stay original.</p>
+    <h2>Moderation</h2>
+    <p>Public cards need a report button, a review queue, and a way to remove abusive or infringing work. That cannot be done honestly with browser-only storage.</p>
+    <h2>Voting</h2>
+    <p>Votes would be stored on a server, tied to an authenticated account, limited to the published voting window, and protected against simple automation. The ranking formula would be published beside the results. Client-side counters are not used here because anyone could rewrite them.</p>
+    <h2>Auctions</h2>
+    <p>The five physical cards, once they exist, should be sold through an established auction house or marketplace rather than a custom checkout on this static site. Candidates to evaluate later include eBay auctions, Heritage Auctions, Goldin, and Catawiki. The site would then record only a verified result: the house, the date, the lot URL, the currency, and the price. No partnership with those companies is claimed.</p>
+    <h2>Privacy and hosting</h2>
+    <p>GitHub Pages can publish this site. It cannot host private accounts or a trustworthy vote. A later backend would need its own security review. Possible shapes include a hosted Postgres database and a small authenticated API. No secrets belong in the static JavaScript.</p>
+    <h2>What works today</h2>
+    <p>The creator, the local draft list, the PNG export, the rarity formula, and the labeled demonstration pages.</p>
+  </article>
+</Base>

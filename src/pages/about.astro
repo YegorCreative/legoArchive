@@ -1,0 +1,27 @@
+---
+import Base from "../layouts/Base.astro";
+import { loadCatalog } from "../lib/load-catalog";
+
+const catalog = loadCatalog();
+---
+<Base title="About" description="What LEGO Archive is, where the data comes from, and what it does not claim.">
+  <article class="prose">
+    <p class="eyebrow">About</p>
+    <h1 class="lede">An unofficial museum</h1>
+    <p>LEGO Archive documents sets, years, themes, and stories. It is a fan project by YegorCreative. It is not a store, and it is not affiliated with the LEGO Group.</p>
+    <p>LEGO® is a trademark of the LEGO Group of companies, which does not sponsor, authorize, or endorse this website.</p>
+    <h2 id="sources">Data sources</h2>
+    <p>The catalog is the official Rebrickable CSV download: <code>sets.csv</code> and <code>themes.csv</code>, retrieved {catalog.snapshot.retrievedAt}. Rebrickable allows those files to be downloaded at most once a day and used, including commercially, with attribution. This site does not scrape Rebrickable pages. Set photographs are loaded from Rebrickable’s image CDN, which its terms allow external sites to display.</p>
+    <p>{catalog.snapshot.setCount.toLocaleString("en-US")} sets and {catalog.snapshot.themeCount.toLocaleString("en-US")} theme records are in this snapshot. Coverage is whatever Rebrickable had published that day. It is not certified as every LEGO set ever released.</p>
+    <ul>
+      {catalog.snapshot.limitations.map((item) => <li>{item}</li>)}
+    </ul>
+    <p>BrickLink was not used. Its catalog terms do not grant this project a bulk price feed, and historical prices were not scraped.</p>
+    <h2>Prices</h2>
+    <p>The price model can store an original retail price, separate new and used estimates, currency, market, date, source, and verification. Until those observations are entered from a permitted source, every price field reads “Unavailable.” Unknown numbers are not treated as zero.</p>
+    <h2>Set numbers</h2>
+    <p>The canonical URL uses Rebrickable’s full set number, such as <code>7140-1</code>, because hundreds of printed numbers have more than one catalog record. A short number with only one match still resolves in the set viewer.</p>
+    <h2>Brick Legends</h2>
+    <p>Brick Legends is a separate section for original brick-style characters. Drafts stay in the browser. Demonstration cards are fiction. Public accounts, voting, and auctions are not part of this release.</p>
+  </article>
+</Base>

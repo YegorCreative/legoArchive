@@ -1,0 +1,60 @@
+---
+import Base from "../../layouts/Base.astro";
+import { imageUrl, rootTheme } from "../../lib/catalog";
+import { formatCount } from "../../lib/format";
+import { href } from "../../lib/href";
+import { loadCatalog } from "../../lib/load-catalog";
+
+const catalog = loadCatalog();
+const starWars = catalog.themeBySlug.get("star-wars");
+const sets = catalog.sets
+  .filter((set) => set.year === 1999 && rootTheme(set.themeId, catalog.themeById)?.id === starWars?.id)
+  .sort((a, b) => a.id.localeCompare(b.id, "en", { numeric: true }));
+const mindstorms = catalog.sets.find((set) => set.id === "9748-1");
+const shown = ["7140-1", "7110-1", "7150-1", "7130-1", "7128-1"]
+  .map((id) => catalog.setById.get(id))
+  .filter((set) => set != null);
+---
+<Base title="The beginning of LEGO Star Wars" description="A sourced note on the 1999 LEGO Star Wars sets in this archive.">
+  <article class="prose">
+    <p class="eyebrow">Story · 1999</p>
+    <h1 class="lede">The beginning of LEGO Star Wars</h1>
+    <p>This page separates two kinds of information. The counts and piece totals come from the Rebrickable snapshot dated {catalog.snapshot.retrievedAt.slice(0, 10)}. The surrounding history is paraphrased from published reporting and linked below. Where those sources disagree, the disagreement is left visible.</p>
+
+    <h2>What this catalog can verify</h2>
+    <p>The snapshot has a root theme named Star Wars. In 1999 it contains {formatCount(sets.length)} sets filed directly under that root theme. Their piece counts are Rebrickable’s <code>num_parts</code> values. Fan sites publish different totals for some of the same sets. This archive does not mix those totals in.</p>
+    <ul>
+      {sets.map((set) => (
+        <li><a href={href(`sets/${set.id}/`)}>{set.name}</a> · {set.id} · {set.parts == null ? "piece count unavailable" : `${formatCount(set.parts)} pieces`}</li>
+      ))}
+    </ul>
+    {mindstorms && (
+      <p>One more 1999 record uses a Star Wars name without sitting under that root theme: <a href={href(`sets/${mindstorms.id}/`)}>{mindstorms.name}</a> ({mindstorms.id}) is filed under Mindstorms, with a Star Wars subtheme, and {mindstorms.parts == null ? "no piece count" : `${formatCount(mindstorms.parts)} recorded pieces`}. It is not counted in the {formatCount(sets.length)} above.</p>
+    )}
+    <p>Set 7140-1, X-wing Fighter, is in the 1999 Star Wars list{catalog.setById.get("7140-1")?.parts ? ` with ${formatCount(catalog.setById.get("7140-1")?.parts ?? null)} recorded pieces` : ""}. The snapshot does not include an original retail price for it, so this page does not state one.</p>
+
+    <div class="figure-row">
+      {shown.map((set) => (
+        <figure>
+          <a href={href(`sets/${set.id}/`)}><img src={imageUrl(catalog.snapshot, set.id)} alt="" /></a>
+          <figcaption>{set.name}. Image: Rebrickable.</figcaption>
+        </figure>
+      ))}
+    </div>
+
+    <h2>What published reporting adds</h2>
+    <p>The Brothers Brick, in a 2019 feature, reports that the LEGO Group and Lucasfilm reached a licensing agreement in 1998 and that Lucasfilm announced the partnership that year. The same article says LEGO Star Wars was presented at the New York International Toy Fair in February 1999, and that the January 1999 LEGO Shop-at-Home catalog showed five original-trilogy sets, with shipping described as beginning as early as March 1999. Those five names match records in this snapshot: the X-wing, TIE Fighter & Y-wing, Landspeeder, Snowspeeder, and Speeder Bikes.</p>
+    <p>Brick Fanatics has reported that a Toy Fair promotional set was distributed before the retail wave and has been described as the first LEGO Star Wars set in collectors’ hands. This snapshot’s 1999 Star Wars list is the catalogued retail and related records above. It should not be read as a complete account of every promotional item.</p>
+
+    <h2>What this page does not claim</h2>
+    <p>It does not rank a single set as the undisputed first. It does not give a retail price, a retirement date, or a present-day value. It does not treat the {formatCount(sets.length)} records as every Star Wars product issued in 1999.</p>
+
+    <h2>Sources</h2>
+    <ul>
+      <li><a href={catalog.snapshot.sourceUrl}>Rebrickable database downloads</a>, retrieved {catalog.snapshot.retrievedAt.slice(0, 10)}. Set images are shown under Rebrickable’s permission to use set images on external sites.</li>
+      <li><a href="https://www.brothers-brick.com/2019/04/09/the-story-behind-the-1999-launch-of-lego-star-wars-feature/">The Brothers Brick, “The story behind the 1999 launch of LEGO Star Wars” (9 April 2019)</a></li>
+      <li><a href="https://www.brickfanatics.com/the-very-first-lego-star-wars-set-5500">Brick Fanatics, on the Toy Fair promotional set</a></li>
+    </ul>
+    <p><a href={href("years/1999/star-wars/")}>Browse the 1999 Star Wars sets</a></p>
+  </article>
+</Base>

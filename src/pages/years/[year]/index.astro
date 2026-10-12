@@ -1,0 +1,57 @@
+---
+import SetCard from "../../../components/SetCard.astro";
+import Base from "../../../layouts/Base.astro";
+import { groupByRootTheme, largestSet, pieceStats, setsInYear } from "../../../lib/catalog";
+import { formatCount } from "../../../lib/format";
+import { href } from "../../../lib/href";
+import { loadCatalog } from "../../../lib/load-catalog";
+
+export function getStaticPaths() {
+  const catalog = loadCatalog();
+  return catalog.years.map((year) => ({ params: { year: String(year) } }));
+}
+
+const catalog = loadCatalog();
+const year = Number(Astro.params.year);
+const sets = setsInYear(catalog, year);
+const groups = groupByRootTheme(sets, catalog);
+const pieces = pieceStats(sets);
+const largest = largestSet(sets);
+const index = catalog.years.indexOf(year);
+const previous = catalog.years[index - 1];
+const next = catalog.years[index + 1];
+---
+<Base title={`LEGO in ${year}`} description={`Documented LEGO sets from ${year} in the Rebrickable snapshot.`}>
+  <p class="eyebrow">Year archive</p>
+  <h1 class="lede">LEGO in {year}</h1>
+  <p class="notice">These figures count records in the Rebrickable snapshot dated {catalog.snapshot.retrievedAt.slice(0, 10)}. They are not a certificate that every set released in {year} is listed.</p>
+  <div class="stats">
+    <div class="stat"><b>{formatCount(sets.length)}</b><span>Documented sets</span></div>
+    <div class="stat"><b>{formatCount(groups.length)}</b><span>Root themes</span></div>
+    <div class="stat"><b>{formatCount(pieces.total)}</b><span>Pieces where a count is recorded</span></div>
+    <div class="stat"><b>{formatCount(pieces.unknown)}</b><span>Sets with no piece count</span></div>
+    <div class="stat"><b>Unavailable</b><span>Most expensive at original retail</span></div>
+    <div class="stat"><b>{largest ? largest.name : "Unavailable"}</b><span>Largest recorded piece count{largest?.parts ? `: ${formatCount(largest.parts)}` : ""}</span></div>
+    <div class="stat"><b>Unavailable</b><span>Most valuable today</span></div>
+  </div>
+  <p>Original retail prices and current market values are not in this snapshot, so those highlights stay unavailable. {pieces.unknown > 0 ? `${formatCount(pieces.unknown)} sets have no recorded piece count and are left out of the piece total.` : ""}</p>
+  {year === 1999 && <p><a href={href("stories/beginning-of-lego-star-wars/")}>Historical note: the beginning of LEGO Star Wars, with sources.</a></p>}
+  <nav class="year-picker" aria-label="Adjacent years">
+    {previous && <a class="chip" href={href(`years/${previous}/`)}>{previous}</a>}
+    {next && <a class="chip" href={href(`years/${next}/`)}>{next}</a>}
+  </nav>
+  <nav class="year-list" aria-label="Themes in this year">
+    {groups.map((group) => <a href={`#${group.theme.slug}`}>{group.theme.name}</a>)}
+  </nav>
+  {groups.map((group) => (
+    <section id={group.theme.slug}>
+      <div class="section-head">
+        <h2>{group.theme.name}</h2>
+        <a href={href(`years/${year}/${group.theme.slug}/`)}>{group.sets.length} sets</a>
+      </div>
+      <div class="card-grid">
+        {group.sets.map((set) => <SetCard set={set} catalog={catalog} root={group.theme} />)}
+      </div>
+    </section>
+  ))}
+</Base>

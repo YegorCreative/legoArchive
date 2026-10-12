@@ -1,0 +1,16 @@
+---
+import { href } from "../lib/href";
+const catalog = href(`data/catalog.json?v=${Date.now()}`);
+---
+<div id="set-explorer" data-catalog={href("data/catalog.json")} data-base={import.meta.env.BASE_URL}>
+  <p id="set-status" role="status">Loading this set from the catalog index…</p>
+  <div id="set-root"></div>
+  <noscript>
+    <p class="notice">This set view needs JavaScript. Year and theme pages list the same records without it. Snapshot file: <a href={catalog}>catalog.json</a>.</p>
+  </noscript>
+</div>
+<script>
+  import { mountSetExplorer } from "../scripts/set-explorer";
+  const node = document.querySelector("#set-explorer");
+  if (node instanceof HTMLElement) mountSetExplorer(node);
+</script>

@@ -1,0 +1,25 @@
+---
+import { decadeOf } from "../lib/catalog";
+import { href } from "../lib/href";
+
+interface Props {
+  years: number[];
+}
+const groups = new Map<number, number[]>();
+for (const year of Astro.props.years) {
+  const decade = decadeOf(year);
+  groups.set(decade, [...(groups.get(decade) ?? []), year]);
+}
+---
+<div class="timeline" tabindex="0" aria-label="Years by decade">
+  {[...groups.entries()].map(([decade, years]) => (
+    <section class="decade">
+      <h3>{decade}s</h3>
+      <ol class="year-list">
+        {years.map((year) => (
+          <li><a href={href(`years/${year}/`)}>{year}</a></li>
+        ))}
+      </ol>
+    </section>
+  ))}
+</div>

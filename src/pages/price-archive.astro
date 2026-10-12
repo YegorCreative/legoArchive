@@ -1,0 +1,31 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base title="Price archive" description="The foundation for comparing original LEGO retail prices with later market observations.">
+  <p class="eyebrow">Price archive</p>
+  <h1 class="lede">What it cost, and what it might be worth</h1>
+  <p class="deck">Phase 1 keeps the shelves ready and refuses to invent prices. A comparison appears only when a record stores both an original retail observation and a later market observation.</p>
+  <div class="price-grid" style="grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));">
+    <article class="panel">
+      <h2>Original retail</h2>
+      <p>Unavailable</p>
+      <p class="quiet">Needs amount, currency, market, source, and verification status.</p>
+    </article>
+    <article class="panel">
+      <h2>Current estimate</h2>
+      <p>Unavailable</p>
+      <p class="quiet">New and used values are separate. An estimate is not a guaranteed selling price.</p>
+    </article>
+  </div>
+  <section class="panel">
+    <h2>Price history</h2>
+    <p>A line is drawn only when at least two dated observations exist. An original price and a single current estimate do not become a curve with invented years in between.</p>
+    <p class="quiet">No set in this snapshot has two dated observations, so no chart is shown.</p>
+  </section>
+  <section class="prose">
+    <h2>How a price will be stored</h2>
+    <p>Each observation can record the set, the kind of price (original retail, estimated new, or estimated used), the amount, the currency, the market, the date, the source, and whether it is verified or estimated. USD is the first currency the archive expects. Other currencies can use the same fields later.</p>
+    <p>Inflation adjustments, when a verified original USD price exists, should use a published United States index such as the Bureau of Labor Statistics Consumer Price Index. No index value is applied in this release because there is no verified original price to adjust.</p>
+    <p>Percentage change is calculated only when both amounts exist and the original amount is greater than zero. Unknown prices are never stored or sorted as zero.</p>
+  </section>
+</Base>

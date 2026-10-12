@@ -1,0 +1,147 @@
+---
+import Base from "../../layouts/Base.astro";
+import {
+  ACCESSORIES,
+  ACCENT_COLORS,
+  ARM_OPTIONS,
+  BACKGROUNDS,
+  CLOTH_COLORS,
+  DEFAULT_APPEARANCE,
+  EXPRESSIONS,
+  FINISHES,
+  HAIR_OPTIONS,
+  HAT_OPTIONS,
+  HEAD_OPTIONS,
+  HELMET_OPTIONS,
+  LEG_OPTIONS,
+  TORSO_OPTIONS,
+} from "../../lib/character";
+import { RARITY_BANDS } from "../../lib/rarity";
+
+const groups = [
+  ["head", "Head", HEAD_OPTIONS],
+  ["expression", "Expression", EXPRESSIONS],
+  ["hair", "Hair", HAIR_OPTIONS],
+  ["hat", "Hat", HAT_OPTIONS],
+  ["helmet", "Helmet", HELMET_OPTIONS],
+  ["torso", "Torso", TORSO_OPTIONS],
+  ["arms", "Arms", ARM_OPTIONS],
+  ["legs", "Legs", LEG_OPTIONS],
+  ["accessory", "Accessory", ACCESSORIES],
+  ["background", "Background", BACKGROUNDS],
+] as const;
+---
+<Base title="Character creator" description="Design an original Brick Legends character on this device." section="legends">
+  <p class="eyebrow">Studio</p>
+  <h1 class="lede">Character creator</h1>
+  <p class="deck">The preview updates as you choose. Saving keeps a draft in this browser’s local storage. It does not create an account, a public card number, or a vote.</p>
+  <div class="creator" id="creator">
+    <form>
+      <label>Character name<input name="name" required maxlength="42" value="Captain Brickstorm" /></label>
+      <label>Creator name<input name="creator" required maxlength="42" placeholder="Your name" /></label>
+      <label>Card year<input name="cardYear" type="number" min="2026" max="2100" value="2027" /></label>
+      <label>Biography<textarea name="bio" maxlength="600">A storm pilot with a paper map. This text stays on your device until you save a local draft.</textarea></label>
+      <fieldset>
+        <legend>Abilities</legend>
+        <label>Ability 1<input name="abilityName1" value="Lantern beam" /></label>
+        <label>Description<input name="abilityText1" value="Lights the night background." /></label>
+        <label>Ability 2<input name="abilityName2" /></label>
+        <label>Description<input name="abilityText2" /></label>
+        <label>Ability 3<input name="abilityName3" /></label>
+        <label>Description<input name="abilityText3" /></label>
+      </fieldset>
+      <fieldset>
+        <legend>Fictional statistics</legend>
+        <label>Power<input name="power" type="number" min="0" max="100" value="90" /></label>
+        <label>Creativity<input name="creativity" type="number" min="0" max="100" value="96" /></label>
+        <label>Defense<input name="defense" type="number" min="0" max="100" value="80" /></label>
+        <p id="rarity-readout" aria-live="polite"></p>
+        <ul>
+          {RARITY_BANDS.map((band) => <li>{band.rarity}: {band.range}</li>)}
+        </ul>
+      </fieldset>
+      <fieldset>
+        <legend>Finish</legend>
+        <div class="swatches">
+          {FINISHES.map((color) => (
+            <label>
+              <input type="radio" name="finish" value={color.id} checked={color.id === DEFAULT_APPEARANCE.finish} />
+              <span style={`background:${color.value}`}></span>
+              <span class="sr">{color.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      {groups.map(([name, label, options]) => (
+        <fieldset>
+          <legend>{label}</legend>
+          <div class="choice-row">
+            {options.map((option) => (
+              <label>
+                <input type="radio" name={name} value={option.id} checked={option.id === DEFAULT_APPEARANCE[name]} />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ))}
+      <fieldset>
+        <legend>Clothing colors</legend>
+        <p>Torso</p>
+        <div class="swatches">
+          {CLOTH_COLORS.map((color) => (
+            <label><input type="radio" name="torsoColor" value={color.id} checked={color.id === DEFAULT_APPEARANCE.torsoColor} /><span style={`background:${color.value}`}></span><span class="sr">{color.label}</span></label>
+          ))}
+        </div>
+        <p>Arms</p>
+        <div class="swatches">
+          {CLOTH_COLORS.map((color) => (
+            <label><input type="radio" name="armColor" value={color.id} checked={color.id === DEFAULT_APPEARANCE.armColor} /><span style={`background:${color.value}`}></span><span class="sr">{color.label}</span></label>
+          ))}
+        </div>
+        <p>Legs</p>
+        <div class="swatches">
+          {CLOTH_COLORS.map((color) => (
+            <label><input type="radio" name="legColor" value={color.id} checked={color.id === DEFAULT_APPEARANCE.legColor} /><span style={`background:${color.value}`}></span><span class="sr">{color.label}</span></label>
+          ))}
+        </div>
+        <p>Accent</p>
+        <div class="swatches">
+          {ACCENT_COLORS.map((color) => (
+            <label><input type="radio" name="accent" value={color.id} checked={color.id === DEFAULT_APPEARANCE.accent} /><span style={`background:${color.value}`}></span><span class="sr">{color.label}</span></label>
+          ))}
+        </div>
+      </fieldset>
+      <p class="quiet">A helmet replaces hair and hats. That is a studio rule, not a rarity rule.</p>
+      <button class="primary" type="submit">Save draft on this browser</button>
+    </form>
+    <div class="preview-col">
+      <button class="flip" id="flip-card" type="button" aria-pressed="false">
+        <span class="sr">Flip card</span>
+        <span class="flip-inner">
+          <span class="flip-face front" id="card-front"></span>
+          <span class="flip-face back" id="card-back"></span>
+        </span>
+      </button>
+      <div class="pager">
+        <button id="download-front" type="button">Download front PNG</button>
+        <button id="download-back" type="button">Download back PNG</button>
+      </div>
+      <p class="quiet">Exports are 1500 by 2100 pixels, a 600 DPI starting point for a 2.5 by 3.5 inch card. They are not a print order.</p>
+      <h2>Drafts on this browser</h2>
+      <div id="drafts" class="drafts"></div>
+    </div>
+  </div>
+  <noscript><p class="notice">The live preview and PNG export need JavaScript. Nothing is uploaded either way.</p></noscript>
+</Base>
+<script>
+  import { mountCreator } from "../../scripts/creator";
+  const root = document.querySelector("#creator");
+  const flip = document.querySelector("#flip-card");
+  if (root instanceof HTMLElement) mountCreator(root);
+  flip?.addEventListener("click", () => {
+    if (!(flip instanceof HTMLButtonElement)) return;
+    const back = flip.classList.toggle("is-back");
+    flip.setAttribute("aria-pressed", back ? "true" : "false");
+  });
+</script>

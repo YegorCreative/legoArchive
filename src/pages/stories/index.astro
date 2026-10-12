@@ -1,0 +1,15 @@
+---
+import Base from "../../layouts/Base.astro";
+import { href } from "../../lib/href";
+---
+<Base title="Stories" description="Sourced stories from LEGO history.">
+  <p class="eyebrow">Stories</p>
+  <h1 class="lede">Stories behind the bricks</h1>
+  <p class="deck">Essays are added only when the claims can be tied to a source. One story is published in this release.</p>
+  <article class="panel">
+    <p class="eyebrow">1999</p>
+    <h2>The beginning of LEGO Star Wars</h2>
+    <p>What the catalog can verify about the 1999 Star Wars records, and what published reporting adds around the licensing announcement.</p>
+    <p><a href={href("stories/beginning-of-lego-star-wars/")}>Read the story</a></p>
+  </article>
+</Base>

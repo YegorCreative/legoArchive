@@ -1,0 +1,36 @@
+---
+import LegendCard from "../../components/LegendCard.astro";
+import Base from "../../layouts/Base.astro";
+import { ANNUAL_FIVE } from "../../data/legends-demo";
+---
+<Base title="The Annual Five" description="An illustrative layout for five yearly Brick Legends cards. None have been produced." section="legends">
+  <p class="eyebrow">The Annual Five</p>
+  <h1 class="lede">Five cards. None printed yet.</h1>
+  <p class="notice">This is an illustrative 2027 layout. No character has been selected. No physical card has been produced. No auction has been scheduled, and no bid or sale price is shown.</p>
+  <section class="prose">
+    <h2>What the real selection would require</h2>
+    <p>Each year, the intention is to choose five original characters and produce one physical card for each, numbered as a 1 of 1. Edition numbers would look like 2027-001 through 2027-005. Selection would follow published criteria: originality, craft, eligibility, and community response once voting exists. A creator would have to license the design for that physical card before it could be made or sold.</p>
+    <p>Until those rules are adopted and a selection actually happens, the Hall of Fame has no inductees.</p>
+  </section>
+  <div class="annual-grid">
+    {ANNUAL_FIVE.map((character) => (
+      <article class="panel">
+        <p class="eyebrow">Illustrative edition {character.edition} · marked 1/1 only as a layout</p>
+        <LegendCard character={character} />
+        <dl class="facts">
+          <div><dt>Character</dt><dd>{character.name}</dd></div>
+          <div><dt>Creator</dt><dd>{character.creator}</dd></div>
+          <div><dt>Award year</dt><dd>Not awarded</dd></div>
+          <div><dt>Physical card</dt><dd>Not produced</dd></div>
+          <div><dt>Auction status</dt><dd>No auction</dd></div>
+          <div><dt>Result</dt><dd>None</dd></div>
+        </dl>
+        <p>{character.bio}</p>
+      </article>
+    ))}
+  </div>
+  <section class="panel">
+    <h2>Hall of Fame</h2>
+    <p>No confirmed inductees. Demonstration cards are not enrolled.</p>
+  </section>
+</Base>

@@ -1,0 +1,31 @@
+---
+import LegendCard from "../../components/LegendCard.astro";
+import Base from "../../layouts/Base.astro";
+import { ANNUAL_FIVE } from "../../data/legends-demo";
+import { RARITY_BANDS, RARITY_RULE_VERSION } from "../../lib/rarity";
+import { href } from "../../lib/href";
+---
+<Base title="Brick Legends" description="Create original brick-style characters and preview collectible cards." section="legends">
+  <p class="eyebrow">Brick Legends</p>
+  <h1 class="lede">Create. Collect. Compete. Become legendary.</h1>
+  <p class="deck">A studio for original characters inside LEGO Archive. The figures are drawn for this site. They are not LEGO minifigures, and the LEGO Group does not endorse them.</p>
+  <div class="stats">
+    <a class="stat" href={href("brick-legends/create/")}><b>Create</b><span>Design a character and export a card</span></a>
+    <a class="stat" href={href("brick-legends/rankings/")}><b>Rankings</b><span>Layout only. No votes yet.</span></a>
+    <a class="stat" href={href("brick-legends/annual-five/")}><b>Annual Five</b><span>Illustrative. Nothing has been printed.</span></a>
+  </div>
+  <section>
+    <h2>Rarity is a published formula</h2>
+    <p>Rule {RARITY_RULE_VERSION} scores fictional stats: creativity 40%, power 34%, defense 26%. The band is stored with the card so a later rule does not rewrite it. Rarity is not a print-run size and not a community rank.</p>
+    <ul>
+      {RARITY_BANDS.map((band) => <li>{band.rarity}: overall {band.range}</li>)}
+    </ul>
+  </section>
+  <section>
+    <h2>Demonstration cards</h2>
+    <p class="notice">These characters were written for the prototype. They are not submissions, winners, or physical cards.</p>
+    <div class="annual-grid">
+      {ANNUAL_FIVE.slice(0, 2).map((character) => <LegendCard character={character} />)}
+    </div>
+  </section>
+</Base>

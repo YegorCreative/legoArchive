@@ -1,0 +1,79 @@
+---
+import "../styles/global.css";
+import { href } from "../lib/href";
+
+interface Props {
+  title: string;
+  description: string;
+  section?: "archive" | "legends";
+}
+const { title, description, section = "archive" } = Astro.props;
+const fullTitle = title === "LEGO Archive" ? title : `${title} · LEGO Archive`;
+const path = Astro.url.pathname;
+const current = (target: string) => path === href(target);
+const canonical = new URL(path, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    <link rel="icon" href={href("favicon.svg")} type="image/svg+xml" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+  </head>
+  <body data-section={section}>
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href={href("")}>
+        <strong>LEGO ARCHIVE</strong>
+        <span>Every set. Every year. Every story.</span>
+      </a>
+      <details class="nav-pop" open>
+        <summary>Menu</summary>
+        <nav class="site-nav" aria-label="Primary">
+          <a href={href("years/")} aria-current={current("years/") ? "page" : undefined}>Years</a>
+          <a href={href("themes/")} aria-current={current("themes/") ? "page" : undefined}>Themes</a>
+          <a href={href("search/")} aria-current={current("search/") ? "page" : undefined}>Search</a>
+          <a href={href("price-archive/")} aria-current={current("price-archive/") ? "page" : undefined}>Price archive</a>
+          <a href={href("stories/")} aria-current={current("stories/") ? "page" : undefined}>Stories</a>
+          <a href={href("brick-legends/")} aria-current={path.includes("/brick-legends/") ? "page" : undefined}>Brick Legends</a>
+          <a href={href("about/")} aria-current={current("about/") ? "page" : undefined}>About</a>
+        </nav>
+      </details>
+    </header>
+    {section === "legends" && (
+      <nav class="shell site-nav" aria-label="Brick Legends">
+        <a href={href("brick-legends/")}>Overview</a>
+        <a href={href("brick-legends/create/")}>Create</a>
+        <a href={href("brick-legends/rankings/")}>Rankings</a>
+        <a href={href("brick-legends/annual-five/")}>Annual Five</a>
+        <a href={href("brick-legends/policies/")}>Policies</a>
+      </nav>
+    )}
+    <main id="content" class="shell page">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <strong>LEGO Archive is an unofficial fan-made encyclopedia.</strong>
+      <p>LEGO® is a trademark of the LEGO Group of companies, which does not sponsor, authorize, or endorse this website.</p>
+      <p>Catalog data and set images are from Rebrickable, used with attribution. Prices are shown only when a verified observation is stored. None are stored in this release.</p>
+      <nav aria-label="Footer">
+        <a href={href("about/")}>About and sources</a>
+        <a href={href("brick-legends/policies/")}>Brick Legends policies</a>
+        <a href="https://github.com/YegorCreative/legoArchive">GitHub</a>
+      </nav>
+    </footer>
+    <script>
+      document.addEventListener("error", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLImageElement) || !target.classList.contains("set-img")) return;
+        target.closest(".shot")?.classList.add("is-missing");
+      }, true);
+    </script>
+  </body>
+</html>

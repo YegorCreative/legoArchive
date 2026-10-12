@@ -1,0 +1,156 @@
+---
+import YearTrack from "../components/YearTrack.astro";
+import SetCard from "../components/SetCard.astro";
+import Base from "../layouts/Base.astro";
+import { decadeHighlights, pieceStats, rootTheme } from "../lib/catalog";
+import { formatCount } from "../lib/format";
+import { href } from "../lib/href";
+import { loadCatalog } from "../lib/load-catalog";
+
+const catalog = loadCatalog();
+const pieces = pieceStats(catalog.sets);
+const highlights = decadeHighlights(catalog);
+const pins = ["star-wars", "town", "city", "castle", "space", "technic", "pirates", "ninjago", "friends", "harry-potter", "creator", "duplo", "architecture", "ideas", "icons"]
+  .map((slug) => catalog.themeBySlug.get(slug))
+  .filter((theme) => theme != null);
+const counts = new Map<string, number>();
+for (const set of catalog.sets) {
+  const root = rootTheme(set.themeId, catalog.themeById);
+  if (root) counts.set(root.id, (counts.get(root.id) ?? 0) + 1);
+}
+const decadeCounts = new Map<number, number>();
+for (const set of catalog.sets) {
+  const decade = Math.floor(set.year / 10) * 10;
+  decadeCounts.set(decade, (decadeCounts.get(decade) ?? 0) + 1);
+}
+const maxDecade = Math.max(...decadeCounts.values());
+const first = catalog.years[0];
+const last = catalog.years[catalog.years.length - 1];
+const studColors = ["#c4121a", "#e2b434", "#f4efe6", "#1b1714", "#c6a15a", "#8d1016", "#f7f3ea", "#2d5b45", "#243656", "#c4121a", "#e2b434", "#fff"];
+---
+<Base title="LEGO Archive" description="An unofficial museum of LEGO sets, organized by year, theme, and story.">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Unofficial digital museum</p>
+      <h1 class="lede">Every LEGO set.<br />Every year.<br />Every story.</h1>
+      <p class="deck">A chronological archive of documented LEGO sets. This release holds the Rebrickable snapshot from {catalog.snapshot.retrievedAt.slice(0, 10)}: {formatCount(catalog.snapshot.setCount)} records across {catalog.years.length} years. It is not a claim that every set ever made is already here.</p>
+      <div class="year-picker">
+        <label for="year-range">Choose a year, from {first} to {last}</label>
+        <input id="year-range" type="range" min={first} max={last} value="1999" />
+        <a class="year-go" id="year-go" href={href("years/1999/")}>Enter 1999</a>
+      </div>
+    </div>
+    <div class="studs" aria-hidden="true">
+      {studColors.map((color) => <span style={`background:${color}`} />)}
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Explore by year</h2>
+      <a href={href("years/")}>All years</a>
+    </div>
+    <YearTrack years={catalog.years} />
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Explore by theme</h2>
+      <a href={href("themes/")}>All themes</a>
+    </div>
+    <div class="theme-grid">
+      {pins.map((theme) => (
+        <a class="theme-tile" href={href(`themes/${theme.slug}/`)}>
+          <p class="eyebrow">Theme</p>
+          <h3>{theme.name}</h3>
+          <p>{formatCount(counts.get(theme.id) ?? 0)} documented sets</p>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Largest documented set in each decade</h2>
+    </div>
+    <p class="deck">Chosen only by recorded piece count in this snapshot. This is not a list of the most famous sets, and sets without a piece count are excluded.</p>
+    <div class="card-grid">
+      {highlights.map(({ decade, set }) => {
+        const root = rootTheme(set.themeId, catalog.themeById);
+        return root ? (
+          <div>
+            <p class="eyebrow">{decade}s</p>
+            <SetCard set={set} catalog={catalog} root={root} />
+          </div>
+        ) : null;
+      })}
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>LEGO through the decades</h2></div>
+    <div class="bars">
+      {[...decadeCounts.entries()].sort((a, b) => a[0] - b[0]).map(([decade, count]) => (
+        <a class="bar" href={href("years/")}>
+          <span>{decade}s</span>
+          <i style={`width:${Math.max(8, (count / maxDecade) * 100)}%`}></i>
+          <span>{formatCount(count)}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">Price archive</p>
+    <h2>Original retail price beside today’s value</h2>
+    <p>The comparison is built, and the shelves are empty. This snapshot has no verified original prices and no current market values. Missing prices are not shown as zero, and no appreciation percentage is invented.</p>
+    <p><a href={href("price-archive/")}>Open the price archive</a></p>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">Stories</p>
+    <h2>The beginning of LEGO Star Wars</h2>
+    <p>A sourced note on 1999, kept separate from the raw catalog counts. Piece counts in the story are the snapshot figures, not a blend of fan-site totals.</p>
+    <p><a href={href("stories/beginning-of-lego-star-wars/")}>Read the story</a></p>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">Search</p>
+    <h2>Find a set by number, name, theme, or year</h2>
+    <form action={href("search/")} method="get" class="year-picker">
+      <label class="sr" for="home-q">Search the archive</label>
+      <input id="home-q" name="q" type="search" placeholder="7140 or X-wing" />
+      <button class="primary" type="submit">Search</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">Brick Legends</p>
+    <h2>Create. Collect. Compete. Become legendary.</h2>
+    <p>An original character studio inside the archive. Drafts stay in this browser. Rankings and the Annual Five use labeled demonstration cards. No public voting, accounts, or auctions are open.</p>
+    <p><a href={href("brick-legends/")}>Enter Brick Legends</a></p>
+  </section>
+
+  <section class="stats" aria-label="Snapshot totals">
+    <div class="stat"><b>{formatCount(catalog.snapshot.setCount)}</b><span>Documented sets</span></div>
+    <div class="stat"><b>{catalog.years.length}</b><span>Years represented</span></div>
+    <div class="stat"><b>{formatCount(pieces.known)}</b><span>Sets with a piece count</span></div>
+    <div class="stat"><b>0</b><span>Verified prices</span></div>
+  </section>
+</Base>
+<script>
+  const range = document.querySelector("#year-range");
+  const go = document.querySelector("#year-go");
+  if (range instanceof HTMLInputElement && go instanceof HTMLAnchorElement) {
+    const base = go.href.replace(/years\/\d+\/?$/, "");
+    const update = () => {
+      go.textContent = `Enter ${range.value}`;
+      go.href = `${base}years/${range.value}/`;
+    };
+    range.addEventListener("input", update);
+    update();
+  }
+</script>
+<style>
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>

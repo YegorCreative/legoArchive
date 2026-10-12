@@ -1,0 +1,55 @@
+---
+import Base from "../layouts/Base.astro";
+import { href } from "../lib/href";
+import { loadCatalog } from "../lib/load-catalog";
+
+const catalog = loadCatalog();
+const decades = [...new Set(catalog.years.map((year) => Math.floor(year / 10) * 10))];
+---
+<Base title="Search" description="Search documented LEGO sets by number, name, theme, or year.">
+  <p class="eyebrow">Search</p>
+  <h1 class="lede">Search the archive</h1>
+  <p class="deck">The index loads on this page only. Piece filters skip sets whose piece count is unknown. Price and retirement filters have nothing verified to filter.</p>
+  <div id="search-app" data-catalog={href(`data/catalog.json?v=${catalog.snapshot.retrievedAt}`)} data-base={import.meta.env.BASE_URL}>
+    <form class="filters" role="search">
+      <label>Name or set number<input name="q" type="search" placeholder="7140 or castle" /></label>
+      <label>Year
+        <select name="year"><option value="">Any year</option></select>
+      </label>
+      <label>Decade
+        <select name="decade">
+          <option value="">Any decade</option>
+          {decades.map((decade) => <option value={decade}>{decade}s</option>)}
+        </select>
+      </label>
+      <label>Theme
+        <select name="theme"><option value="">Any theme</option></select>
+      </label>
+      <label>Minimum pieces<input name="min" type="number" min="1" inputmode="numeric" placeholder="Any" /></label>
+      <label>Maximum pieces<input name="max" type="number" min="1" inputmode="numeric" placeholder="Any" /></label>
+      <label>Sort
+        <select name="sort">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="most-pieces">Most pieces</option>
+          <option value="fewest-pieces">Fewest pieces</option>
+          <option value="name">Name</option>
+          <option value="price-retail">Original retail price</option>
+          <option value="price-market">Current market value</option>
+        </select>
+      </label>
+      <button class="primary" type="submit">Apply</button>
+    </form>
+    <fieldset disabled>
+      <legend>Retirement status</legend>
+      <p>Unavailable. This snapshot does not record verified retirement years.</p>
+    </fieldset>
+    <p id="search-status" role="status">Preparing search…</p>
+    <div id="search-results"></div>
+  </div>
+</Base>
+<script>
+  import { mountSearch } from "../scripts/search-page";
+  const node = document.querySelector("#search-app");
+  if (node instanceof HTMLElement) mountSearch(node);
+</script>

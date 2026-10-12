@@ -1,0 +1,31 @@
+---
+import { imageUrl, printedNumber, subthemeName, type LoadedCatalog, type SetRecord, type ThemeRecord } from "../lib/catalog";
+import { formatCount } from "../lib/format";
+import { href } from "../lib/href";
+
+interface Props {
+  set: SetRecord;
+  catalog: LoadedCatalog;
+  root: ThemeRecord;
+}
+const { set, catalog, root } = Astro.props;
+const subtheme = subthemeName(set, catalog, root);
+const printed = printedNumber(set.id);
+---
+<article class="card">
+  <a class="card-link" href={href(`sets/${set.id}/`)}>
+    <figure class="shot">
+      <img class="set-img" src={imageUrl(catalog.snapshot, set.id)} alt="" width="640" height="640" loading="lazy" decoding="async" />
+    </figure>
+    <div class="card-body">
+      <p class="eyebrow">{subtheme ?? root.name}</p>
+      <h3>{set.name}</h3>
+      <p class="meta">
+        <span>{set.id}</span>
+        {printed !== set.id && <span>Printed {printed}</span>}
+      </p>
+      <p>{set.parts == null ? "Piece count unavailable" : `${formatCount(set.parts)} pieces`}</p>
+      <p class="quiet">Retail price unavailable</p>
+    </div>
+  </a>
+</article>

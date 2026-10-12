@@ -1,0 +1,17 @@
+---
+import SetDetail from "../../components/SetDetail.astro";
+import Base from "../../layouts/Base.astro";
+import { loadCatalog } from "../../lib/load-catalog";
+
+export function getStaticPaths() {
+  const catalog = loadCatalog();
+  return [...catalog.prerenderIds].map((setId) => ({ params: { setId } }));
+}
+
+const catalog = loadCatalog();
+const set = catalog.setById.get(Astro.params.setId ?? "");
+if (!set) throw new Error("Missing set");
+---
+<Base title={`${set.name} (${set.id})`} description={`${set.name}, set ${set.id}, released ${set.year}. Prices are unavailable unless a verified observation is stored.`}>
+  <SetDetail catalog={catalog} set={set} />
+</Base>

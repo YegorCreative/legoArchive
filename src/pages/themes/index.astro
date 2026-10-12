@@ -1,0 +1,39 @@
+---
+import Base from "../../layouts/Base.astro";
+import { rootTheme } from "../../lib/catalog";
+import { formatCount } from "../../lib/format";
+import { href } from "../../lib/href";
+import { loadCatalog } from "../../lib/load-catalog";
+
+const catalog = loadCatalog();
+const counts = new Map<string, { count: number; first: number; last: number }>();
+for (const set of catalog.sets) {
+  const theme = rootTheme(set.themeId, catalog.themeById);
+  if (!theme) continue;
+  const current = counts.get(theme.id) ?? { count: 0, first: set.year, last: set.year };
+  current.count += 1;
+  current.first = Math.min(current.first, set.year);
+  current.last = Math.max(current.last, set.year);
+  counts.set(theme.id, current);
+}
+const themes = catalog.themes
+  .filter((theme) => theme.parentId == null && counts.has(theme.id))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+<Base title="Themes" description="LEGO themes as classified in the Rebrickable snapshot.">
+  <p class="eyebrow">Themes</p>
+  <h1 class="lede">Themes, as recorded</h1>
+  <p class="deck">Root themes follow Rebrickable’s parent chain. Town stays Town. City stays City. Names are not rewritten to match later branding.</p>
+  <div class="theme-grid">
+    {themes.map((theme) => {
+      const info = counts.get(theme.id);
+      return (
+        <a class="theme-tile" href={href(`themes/${theme.slug}/`)}>
+          <h3>{theme.name}</h3>
+          <p>{formatCount(info?.count ?? 0)} sets</p>
+          <p class="quiet">{info?.first}–{info?.last}</p>
+        </a>
+      );
+    })}
+  </div>
+</Base>
