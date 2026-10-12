@@ -2,7 +2,7 @@
 import { imageUrl, printedNumber, subthemeName, type LoadedCatalog, type SetRecord, type ThemeRecord } from "../lib/catalog";
 import { formatCount } from "../lib/format";
 import { href } from "../lib/href";
-import { priceOf } from "../lib/price-index";
+import { verifiedPrice } from "../lib/price-index";
 import { formatMoney } from "../lib/pricing";
 
 interface Props {
@@ -13,8 +13,8 @@ interface Props {
 const { set, catalog, root } = Astro.props;
 const subtheme = subthemeName(set, catalog, root);
 const printed = printedNumber(set.id);
-const retailPrice = priceOf(set.id, "original-retail");
-const retail = retailPrice?.verification === "verified" ? retailPrice : null;
+const retail = verifiedPrice(set.id, "original-retail");
+const mailOrder = verifiedPrice(set.id, "mail-order");
 ---
 <article class="card">
   <a class="card-link" href={href(`sets/${set.id}/`)}>
@@ -29,7 +29,8 @@ const retail = retailPrice?.verification === "verified" ? retailPrice : null;
         {printed !== set.id && <span>Printed {printed}</span>}
       </p>
       <p>{set.parts == null ? "Piece count unavailable" : `${formatCount(set.parts)} pieces`}</p>
-      <p class="quiet">{retail ? `Retail ${formatMoney(retail.amount, retail.currency)}` : "Retail price unavailable"}</p>
+      <p class="quiet">{retail ? `Store MSRP ${formatMoney(retail.amount, retail.currency)}` : "Store MSRP unavailable"}</p>
+      {mailOrder && <p class="quiet">Shop at Home {formatMoney(mailOrder.amount, mailOrder.currency)}</p>}
     </div>
   </a>
 </article>

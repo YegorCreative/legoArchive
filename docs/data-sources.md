@@ -16,41 +16,45 @@ Reviewed before use:
 
 Fields used: set number, name, year, theme id, part count, and the image URL pattern. Theme name and parent id come from `themes.csv`.
 
-Fields not in these files, and therefore unavailable in the interface: original retail price, currency, market value, retirement year, exact release date, age guidance, and minifigure count.
+Fields not in these files: original retail price, currency, market value, retirement year, exact release date, age guidance, and minifigure count. Retirement year, exact release date, age, and minifigure count stay unavailable in the interface. A separate hand-checked file, described below, holds a small Shop at Home sample. It is not part of the Rebrickable download.
 
 `num_parts` of 0 is common on books, offers, and other items without an inventoried build (8,337 rows in the imported snapshot). Those are shown as “piece count unavailable,” excluded from piece totals, and sorted after real piece counts.
 
 ## BrickLink
 
-Not integrated. BrickLink does not offer this project an open bulk feed of historical sold prices, and scraping it would break its terms. Current market values stay empty until a permitted, dated source is recorded per set.
+Not integrated, and not called. The Store API is for registered sellers under the [API Terms of Use](https://www.bricklink.com/help.asp?helpID=2216) (updated Feb 2, 2023). Scraping the website is not allowed. Current sealed and used values stay empty until a permitted, dated observation is recorded for a specific set. The setup requirements are in [docs/pricing.md](pricing.md). No credential is stored in this repository.
 
 ## Prices
 
-`src/data/prices.json` is an empty array. No retail or market sample is imported in this phase, because none of the bulk feeds below grants this project a license to copy a price database.
+`src/data/prices.json` holds 14 mail-order prices read from the Fall 1999 US LEGO Shop at Home catalog on the Internet Archive. They include regular shipping and handling. They are not store MSRP, and they are not market values. The set list, the 7140-1 discrepancy, and the BrickLink decision are in [docs/pricing.md](pricing.md).
 
-Each future observation needs all of the following:
+Each observation needs all of the following:
 
+- id, a lowercase slug
 - set id matching a catalog record, such as `7140-1`
-- kind: `original-retail`, `market-new`, or `market-used`
-- amount in major currency units
-- currency (ISO 4217)
+- kind and a matching price class: `original-retail` (`msrp` or `launch-retail`), `mail-order`, `discounted-retail`, `current-shop`, `market-new`, `market-used`, `market-incomplete`, or `auction-sale`
+- condition matching that kind
+- amount in major currency units, greater than zero
+- currency (three-letter ISO code)
 - market or country
 - observation date (`YYYY-MM-DD`)
-- source name, and a source URL in the note when one exists
+- source name and an `https` source URL
+- publication date, or null when the source is not dated to a day
+- `verifiedAt`
 - verification: `verified` or `estimated`
+- note, or null
 
-Missing amounts stay null. They are never stored or charted as zero. A percentage is withheld when either amount is missing, the original is not positive, or the two currencies differ. A history line is withheld until the same set has two dated observations. Inflation stays uncalculated until a published index series is stored beside the original price. For a US-dollar retail price, the intended series is the U.S. Bureau of Labor Statistics CPI-U, series `CUUR0000SA0`, using the annual average for the observation year. The series values themselves have to be copied from BLS with the series id and retrieval date. They are not in the repository yet.
+Missing amounts stay null. They are never stored or charted as zero. A percentage is withheld when either amount is missing, the original is not positive, the currencies differ, or the markets differ. Appreciation also requires a verified store price on one side and a verified market observation on the other. A history chart is withheld until comparable dated market observations exist. One catalog price is not a chart.
+
+US purchasing power uses BLS CPI-U series `CUUR0000SA0` in `src/data/cpi-u.json`, retrieved 2026-10-11. The latest complete year in that file is 2024. Incomplete years are omitted rather than estimated. See [docs/pricing.md](pricing.md).
 
 ### Providers, in priority order
 
-1. Original retail. The authoritative figure is the LEGO Group’s own shop, catalog, or press material for a stated market and date. No public bulk license for those prices was found. Do not scrape LEGO.com. A later sample may be typed in by hand from a page the maintainer opened, with the URL, market, and the date it was read. One hand-checked price is not a history.
-2. Current sealed market. BrickLink’s price guide is the practical source for recent sold prices. The [BrickLink API terms](https://www.bricklink.com/help.asp?helpID=2216) (updated Feb 2, 2023) limit API use to registered sellers, fold in the site terms, and reserve the right to charge. The key would live only in a server or Actions secret, never in client JavaScript. Each import must record whether the figure is a sold average or an asking price, the market, and the date of the pull. The public guide is a rolling recent window, not a complete auction archive.
-3. Current used market. Same BrickLink (or another licensed marketplace) feed, stored as `market-used`, separate from sealed prices.
-4. Historical observations. No open, licensed, dated sold-price archive was found. BrickLink’s visible history is not a license to reconstruct every past sale. BrickEconomy and similar products sell access and do not grant redistribution into this repository. Brickset’s API requires a key and does not allow republishing its database.
-
-Rebrickable’s CSV downloads, which this archive already uses, do not include set retail or market prices. The Rebrickable API is allowed for catalog use with attribution and still is not a retail-price dump. Part price estimates on Rebrickable are 24-hour store averages for new parts, not set MSRP, and they are not imported.
-
-Until a permitted feed or a hand-checked official price is added, every set price field on the site says unavailable. US purchasing power uses BLS CPI-U series `CUUR0000SA0` in `src/data/cpi-u.json`. See [docs/pricing.md](pricing.md). Incomplete years are omitted rather than estimated.
+1. Original retail. The authoritative figure is the LEGO Group’s own shop, catalog, or press material for a stated market and date. No public bulk license for those prices was found. Do not scrape LEGO.com. The Fall 1999 Shop at Home sample was typed from page images a person opened. A mail-order price that includes shipping is labeled `mail-order`, not MSRP. One catalog is not a history.
+2. Current sealed market. BrickLink’s price guide is a practical source for recent sold prices, only after a seller account and permission to store summaries. The key would live only in a server or Actions secret, never in client JavaScript. Each import must record whether the figure is a sold average or an asking price, the market, and the date of the pull. No such import has been run.
+3. Current used market. Same rule, stored as `market-used`, separate from sealed prices. Incomplete sets use `market-incomplete`.
+4. A single auction sale. Record it only when the house, date, lot, currency, condition, and price are published. Do not copy an auction database.
+5. Other datasets. Rebrickable CSVs have no set prices. Part price estimates on Rebrickable are 24-hour store averages for new parts, not set MSRP, and they are not imported. Brickset and BrickEconomy do not grant redistribution of their databases.
 
 ## Identity rules
 

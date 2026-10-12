@@ -24,7 +24,7 @@ The dev server uses the `/legoArchive/` base path. `npm run build` writes one HT
 
 The catalog in `public/data/catalog.json` comes from Rebrickable’s official downloads, with attribution. See [docs/data-sources.md](docs/data-sources.md). Refresh it with `npm run import` at most once a day. Do not scrape Rebrickable.
 
-Prices are not invented. Unknown piece counts are not treated as zero.
+Prices are not invented. Unknown piece counts are not treated as zero. Fourteen Fall 1999 US Shop at Home prices are stored as mail-order figures that include shipping. They are not store MSRP. Current market values are not stored.
 
 ## Brick Legends
 

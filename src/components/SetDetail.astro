@@ -10,8 +10,8 @@ import {
 import { formatCount } from "../lib/format";
 import { href } from "../lib/href";
 import { adjustPurchasingPower, latestCompleteCpiYear } from "../lib/inflation";
-import { priceOf, pricesFor } from "../lib/price-index";
-import { formatMoney, formatPercent, percentChange, pricePerPiece, type PriceObservation } from "../lib/pricing";
+import { verifiedPrice } from "../lib/price-index";
+import { appreciationPercent, formatMoney, formatPercent, pricePerPiece, type PriceObservation } from "../lib/pricing";
 
 interface Props {
   catalog: LoadedCatalog;
@@ -21,32 +21,37 @@ const { catalog, set } = Astro.props;
 const theme = catalog.themeById.get(set.themeId) ?? null;
 const root = rootTheme(set.themeId, catalog.themeById);
 const related = relatedSets(catalog, set);
-const original = pricesFor(set.id).find((price) => price.kind === "original-retail" && price.verification === "verified") ?? null;
-const marketNew = priceOf(set.id, "market-new");
-const marketUsed = priceOf(set.id, "market-used");
-const observations = [original, marketNew, marketUsed].filter((price): price is PriceObservation => price != null);
-const change = percentChange(original?.amount ?? null, marketNew?.amount ?? null, {
-  from: original?.currency ?? null,
-  to: marketNew?.currency ?? null,
-});
-const datedPoints = observations.filter((price) => price.date).length;
-const originalYear = original?.date ? Number(original.date.slice(0, 4)) : null;
+const original = verifiedPrice(set.id, "original-retail");
+const mailOrder = verifiedPrice(set.id, "mail-order");
+const currentShop = verifiedPrice(set.id, "current-shop");
+const marketNew = verifiedPrice(set.id, "market-new");
+const marketUsed = verifiedPrice(set.id, "market-used");
+const marketIncomplete = verifiedPrice(set.id, "market-incomplete");
+const auction = verifiedPrice(set.id, "auction-sale");
+const change = appreciationPercent(original, marketNew ?? marketUsed ?? auction);
 const comparisonYear = latestCompleteCpiYear();
-const adjusted =
-  original?.currency === "USD"
-    ? adjustPurchasingPower(original.amount, Number.isInteger(originalYear) ? originalYear : null, comparisonYear)
-    : null;
-const inflation = !original
-  ? "Not calculated. There is no verified original price to adjust."
+const adjust = (price: PriceObservation | null) => {
+  if (!price || price.currency !== "USD") return null;
+  const year = Number(price.date.slice(0, 4));
+  return adjustPurchasingPower(price.amount, Number.isInteger(year) ? year : null, comparisonYear);
+};
+const adjustedMsrp = adjust(original);
+const adjustedCatalog = adjust(mailOrder);
+const msrpInflation = !original
+  ? "Not calculated. There is no verified store MSRP to adjust."
   : original.currency !== "USD"
     ? "Not calculated. Purchasing-power adjustment is implemented for US dollars only."
-    : adjusted == null || comparisonYear == null
+    : adjustedMsrp == null || comparisonYear == null
       ? "Not calculated. The original year or the comparison year is missing from the stored CPI-U series."
-      : `${formatMoney(adjusted, "USD")} in ${comparisonYear} dollars. This measures purchasing power, not what a collector might pay.`;
-const moneyLine = (price: PriceObservation | null) =>
-  price
-    ? `${formatMoney(price.amount, price.currency)} · ${price.market ?? "Market not recorded"} · ${price.date ?? "Date not recorded"} · ${price.source} · ${price.verification}`
-    : "Unavailable";
+      : `${formatMoney(adjustedMsrp, "USD")} in ${comparisonYear} dollars. This measures purchasing power, not what a collector might pay.`;
+const catalogInflation = !mailOrder
+  ? "Not calculated. There is no verified catalog price to adjust."
+  : mailOrder.currency !== "USD"
+    ? "Not calculated. Purchasing-power adjustment is implemented for US dollars only."
+    : adjustedCatalog == null || comparisonYear == null
+      ? "Not calculated. The catalog year or the comparison year is missing from the stored CPI-U series."
+      : `${formatMoney(adjustedCatalog, "USD")} in ${comparisonYear} dollars. This is the purchasing power of the catalog price, not an inflation-adjusted MSRP and not a collectible value.`;
+const marketPoints = [marketNew, marketUsed, marketIncomplete, auction].filter((price) => price != null).length;
 
 const groups = [
   { title: "Other catalog records with the same printed number", note: "These share a printed number in the source file. They are not automatically earlier or later models.", sets: related.variants, more: related.variantMore },
@@ -88,19 +93,84 @@ const groups = [
 
   <section>
     <h2>Price information</h2>
-    <p class="notice">Estimated values are not guaranteed selling prices. No percentage is calculated unless both the original price and the comparison price are present. Currency is shown with each figure.</p>
-    <dl class="facts">
-      <div><dt>Original retail price</dt><dd>{moneyLine(original)}</dd></div>
-      <div><dt>Current estimated new or sealed value</dt><dd>{moneyLine(marketNew)}</dd></div>
-      <div><dt>Current estimated used value</dt><dd>{moneyLine(marketUsed)}</dd></div>
-      <div><dt>Inflation-adjusted original price</dt><dd>{inflation}</dd></div>
-      <div><dt>Change in value</dt><dd>{formatPercent(change)}</dd></div>
-      <div><dt>Original price per piece</dt><dd>{original ? formatMoney(pricePerPiece(original.amount, set.parts), original.currency) : "Unavailable"}</dd></div>
-      <div><dt>Current estimated price per piece</dt><dd>{marketNew ? formatMoney(pricePerPiece(marketNew.amount, set.parts), marketNew.currency) : "Unavailable"}</dd></div>
+    <p class="notice">A Shop at Home catalog price is not a store MSRP. A marketplace asking price is not a completed sale. Inflation adjustment measures purchasing power, not collectible appreciation. Missing amounts stay unavailable.</p>
+    <div class="price-board">
+      <article class:list={["panel", "price-card", { "is-empty": !original }]}>
+        <p class="eyebrow">Original retail price</p>
+        <p class="amount">{original ? formatMoney(original.amount, original.currency) : "Unavailable"}</p>
+        <p>{original ? `${original.priceClass === "launch-retail" ? "Documented launch retail price" : "Manufacturer’s suggested retail price"} · ${original.market}` : "No verified store MSRP or launch retail price is stored for this set."}</p>
+      </article>
+      <article class:list={["panel", "price-card", { "is-empty": !mailOrder }]}>
+        <p class="eyebrow">Shop at Home catalog price</p>
+        <p class="amount">{mailOrder ? formatMoney(mailOrder.amount, mailOrder.currency) : "Unavailable"}</p>
+        <p>{mailOrder ? `${mailOrder.market} · includes the shipping stated by that catalog · not a store shelf price` : "No verified mail-order catalog price is stored for this set."}</p>
+      </article>
+      <article class:list={["panel", "price-card", { "is-empty": !currentShop }]}>
+        <p class="eyebrow">Current LEGO shop price</p>
+        <p class="amount">{currentShop ? formatMoney(currentShop.amount, currentShop.currency) : "Unavailable"}</p>
+        <p>{currentShop ? currentShop.market : "A price on today’s LEGO shop is not the original retail price, and none is stored here."}</p>
+      </article>
+      <article class:list={["panel", "price-card", { "is-empty": !marketNew }]}>
+        <p class="eyebrow">Current sealed value</p>
+        <p class="amount">{marketNew ? formatMoney(marketNew.amount, marketNew.currency) : "Unavailable"}</p>
+        <p>New, sealed. {marketNew ? "Verified market observation." : "No licensed sealed-market estimate has been retrieved."}</p>
+      </article>
+      <article class:list={["panel", "price-card", { "is-empty": !marketUsed }]}>
+        <p class="eyebrow">Current used value</p>
+        <p class="amount">{marketUsed ? formatMoney(marketUsed.amount, marketUsed.currency) : "Unavailable"}</p>
+        <p>Used, complete. {marketUsed ? "Verified market observation." : "No licensed used-market estimate has been retrieved."}</p>
+      </article>
+      <article class:list={["panel", "price-card", { "is-empty": !marketIncomplete }]}>
+        <p class="eyebrow">Used, incomplete</p>
+        <p class="amount">{marketIncomplete ? formatMoney(marketIncomplete.amount, marketIncomplete.currency) : "Unavailable"}</p>
+        <p>Kept separate from a complete used set.</p>
+      </article>
+      <article class:list={["panel", "price-card", { "is-empty": !auction }]}>
+        <p class="eyebrow">Verified auction sale</p>
+        <p class="amount">{auction ? formatMoney(auction.amount, auction.currency) : "Unavailable"}</p>
+        <p>{auction ? `${auction.condition} · ${auction.market} · ${auction.date}. One completed sale is not an average.` : "One completed sale is not an average, and none is stored for this set."}</p>
+      </article>
+      <article class="panel price-card">
+        <p class="eyebrow">Inflation-adjusted original price</p>
+        <p class="amount">{original && adjustedMsrp != null && comparisonYear != null ? formatMoney(adjustedMsrp, "USD") : "Not calculated"}</p>
+        <p>{msrpInflation}{comparisonYear != null && original && adjustedMsrp != null ? ` Comparison year: ${comparisonYear}.` : ""}</p>
+      </article>
+      <article class="panel price-card">
+        <p class="eyebrow">Catalog price in later dollars</p>
+        <p class="amount">{mailOrder && adjustedCatalog != null && comparisonYear != null ? formatMoney(adjustedCatalog, "USD") : "Not calculated"}</p>
+        <p>{catalogInflation}{comparisonYear != null && mailOrder && adjustedCatalog != null ? ` Comparison year: ${comparisonYear}.` : ""}</p>
+      </article>
+      <article class="panel price-card">
+        <p class="eyebrow">Value change</p>
+        <p class="amount">{formatPercent(change)}</p>
+        <p>{change == null ? "Appreciation needs a verified store MSRP and a later verified market observation in the same currency and market. A Shop at Home price is not used. This is not a prediction that the set will gain value." : "The percentage compares a verified store price with a later verified market observation. It is not a forecast."}</p>
+      </article>
+    </div>
+    <dl class="facts" style="margin-top: 1rem;">
+      <div><dt>Store MSRP per piece</dt><dd>{original ? formatMoney(pricePerPiece(original.amount, set.parts), original.currency) : "Unavailable"}</dd></div>
+      <div><dt>Catalog price per piece</dt><dd>{mailOrder ? formatMoney(pricePerPiece(mailOrder.amount, set.parts), mailOrder.currency) : "Unavailable"}</dd></div>
+      <div><dt>Sealed estimate per piece</dt><dd>{marketNew ? formatMoney(pricePerPiece(marketNew.amount, set.parts), marketNew.currency) : "Unavailable"}</dd></div>
+      <div><dt>Piece count used</dt><dd>{set.parts == null ? "Unavailable" : formatCount(set.parts)}</dd></div>
     </dl>
+    {mailOrder && (
+      <div class="panel" style="margin-top: 1rem;">
+        <h3>Catalog price source</h3>
+        <dl class="facts">
+          <div><dt>Amount</dt><dd>{formatMoney(mailOrder.amount, mailOrder.currency)}</dd></div>
+          <div><dt>Currency</dt><dd>{mailOrder.currency}</dd></div>
+          <div><dt>Market</dt><dd>{mailOrder.market}</dd></div>
+          <div><dt>Condition</dt><dd>Not applicable. This is a catalog price, not a used or sealed grade.</dd></div>
+          <div><dt>Observation date</dt><dd>{mailOrder.date}</dd></div>
+          <div><dt>Verified</dt><dd>{mailOrder.verifiedAt}</dd></div>
+          <div><dt>Status</dt><dd>{mailOrder.verification}</dd></div>
+          <div><dt>Source</dt><dd><a href={mailOrder.sourceUrl}>{mailOrder.source}</a></dd></div>
+        </dl>
+        {mailOrder.note && <p style="margin-top: 0.8rem;">{mailOrder.note}</p>}
+      </div>
+    )}
     <div class="panel" style="margin-top: 1rem;">
       <h3>Price history</h3>
-      {datedPoints >= 2 ? <p>Dated observations are available.</p> : <p>A price-history line is withheld. This set does not have two dated price observations. A single missing middle is not filled in.</p>}
+      {marketPoints >= 2 ? <p>Comparable dated market observations are available.</p> : <p>A market-value chart is withheld. An original or catalog price is not the start of a resale history, and missing years are not filled in.</p>}
     </div>
   </section>
 

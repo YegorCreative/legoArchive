@@ -240,6 +240,18 @@ body[data-section="legends"] .year-list a, body[data-section="legends"] .chip { 
 .figure-row img { width: 100%; aspect-ratio: 1; object-fit: contain; background: white; border-radius: 1rem; }
 .figure-row figcaption { color: var(--muted); font-size: 0.85rem; }
 
+.price-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.9rem; }
+.price-card { display: grid; align-content: start; gap: 0.35rem; }
+.price-card .amount { margin: 0; font-family: var(--serif); font-size: clamp(1.55rem, 2.6vw, 2.15rem); line-height: 1.1; }
+.price-card p { color: var(--muted); font-size: 0.92rem; }
+.price-card.is-empty { background: color-mix(in srgb, var(--paper) 55%, var(--paper-2)); box-shadow: none; }
+.table-wrap { overflow-x: auto; }
+.price-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.price-table th, .price-table td { text-align: left; padding: 0.55rem 0.45rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.price-table th { color: var(--muted); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+.price-table a { text-decoration: none; }
+.price-table a:hover { text-decoration: underline; }
+
 .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.7rem 1rem; margin: 0; }
 .facts div { display: grid; gap: 0.15rem; }
 .facts dt { color: var(--muted); font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; }

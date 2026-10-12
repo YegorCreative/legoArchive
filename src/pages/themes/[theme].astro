@@ -4,6 +4,8 @@ import Base from "../../layouts/Base.astro";
 import { directChildren, largestSet, rootTheme, setsForRoot } from "../../lib/catalog";
 import { formatCount } from "../../lib/format";
 import { href } from "../../lib/href";
+import { coverageLabel, pricedRows } from "../../lib/price-coverage";
+import { formatMoney } from "../../lib/pricing";
 import { loadCatalog } from "../../lib/load-catalog";
 
 export function getStaticPaths() {
@@ -34,6 +36,12 @@ const largest = [...sets].filter((set) => set.parts != null).sort((a, b) => (b.p
 const children = directChildren(catalog, theme.id);
 const notableRoot = isRoot ? theme : rootTheme(theme.id, catalog.themeById) ?? theme;
 const parent = theme.parentId ? catalog.themeById.get(theme.parentId) : null;
+const covered = sets.map((set) => ({ id: set.id, name: set.name, year: set.year, parts: set.parts }));
+const msrp = pricedRows(covered, "original-retail");
+const mail = pricedRows(covered, "mail-order");
+const sealed = pricedRows(covered, "market-new");
+const used = pricedRows(covered, "market-used");
+const marketCount = sealed.length + used.length + pricedRows(covered, "market-incomplete").length + pricedRows(covered, "auction-sale").length;
 ---
 <Base title={theme.name} description={`${theme.name} in the LEGO Archive snapshot.`}>
   <p class="eyebrow">{parent ? <a href={href(`themes/${parent.slug}/`)}>{parent.name}</a> : "Root theme"}</p>
@@ -45,7 +53,14 @@ const parent = theme.parentId ? catalog.themeById.get(theme.parentId) : null;
     <div class="stat"><b>{years[0] ?? "Unavailable"}</b><span>Earliest year in the snapshot</span></div>
     <div class="stat"><b>{years[years.length - 1] ?? "Unavailable"}</b><span>Most recent year in the snapshot</span></div>
     <div class="stat"><b>{largestSet(sets)?.parts ? formatCount(largestSet(sets)?.parts ?? null) : "Unavailable"}</b><span>Largest recorded piece count</span></div>
+    <div class="stat"><b>{coverageLabel(msrp.length, sets.length)}</b><span>Sets with a verified store MSRP</span></div>
+    <div class="stat"><b>{coverageLabel(mail.length, sets.length)}</b><span>Sets with a verified Shop at Home price</span></div>
+    <div class="stat"><b>{formatCount(marketCount)}</b><span>Sets with a current market estimate</span></div>
+    <div class="stat"><b>{msrp[0] ? formatMoney(msrp[0].price.amount, msrp[0].price.currency) : "Unavailable"}</b><span>Highest verified store MSRP{msrp[0] ? `: ${msrp[0].set.name}` : ""}</span></div>
+    <div class="stat"><b>{mail[0] ? formatMoney(mail[0].price.amount, mail[0].price.currency) : "Unavailable"}</b><span>Highest Shop at Home price in this sample{mail[0] ? `: ${mail[0].set.name}` : ""}</span></div>
+    <div class="stat"><b>{sealed[0] ? formatMoney(sealed[0].price.amount, sealed[0].price.currency) : "Unavailable"}</b><span>Highest verified sealed market value</span></div>
   </div>
+  <p>{mail.length > 0 ? `The Shop at Home figures cover ${coverageLabel(mail.length, sets.length)} sets in this theme. They include the shipping printed in that catalog, and they are not a price trend.` : "No verified catalog price is stored for this theme, so no price trend is drawn."} Store MSRP coverage is {coverageLabel(msrp.length, sets.length)}. Current market coverage is {coverageLabel(marketCount, sets.length)}.</p>
   <section>
     <h2>Years</h2>
     <div class="year-list">

@@ -2,15 +2,21 @@
 import Base from "../layouts/Base.astro";
 import { href } from "../lib/href";
 import { loadCatalog } from "../lib/load-catalog";
+import { allPrices } from "../lib/price-index";
 
 const catalog = loadCatalog();
+const shopPrices = Object.fromEntries(
+  allPrices()
+    .filter((price) => price.kind === "mail-order" && price.verification === "verified")
+    .map((price) => [price.setId, { amount: price.amount, currency: price.currency }]),
+);
 const decades = [...new Set(catalog.years.map((year) => Math.floor(year / 10) * 10))];
 ---
 <Base title="Search" description="Search documented LEGO sets by number, name, theme, or year.">
   <p class="eyebrow">Search</p>
   <h1 class="lede">Search the archive</h1>
-  <p class="deck">The index loads on this page only. Piece filters skip sets whose piece count is unknown. Price and retirement filters have nothing verified to filter.</p>
-  <div id="search-app" data-catalog={href(`data/catalog.json?v=${catalog.snapshot.retrievedAt}`)} data-base={import.meta.env.BASE_URL}>
+  <p class="deck">The index loads on this page only. Piece filters skip sets whose piece count is unknown. Original price and market value cannot be sorted yet. Shop at Home catalog prices are not treated as store MSRP, and retirement years are not recorded.</p>
+  <div id="search-app" data-catalog={href(`data/catalog.json?v=${catalog.snapshot.retrievedAt}`)} data-base={import.meta.env.BASE_URL} data-shop={JSON.stringify(shopPrices)}>
     <form class="filters" role="search">
       <label>Name or set number<input name="q" type="search" placeholder="7140 or castle" /></label>
       <label>Year

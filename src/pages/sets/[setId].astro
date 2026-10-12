@@ -2,6 +2,7 @@
 import SetDetail from "../../components/SetDetail.astro";
 import Base from "../../layouts/Base.astro";
 import { loadCatalog } from "../../lib/load-catalog";
+import { verifiedPrice } from "../../lib/price-index";
 
 export function getStaticPaths() {
   const catalog = loadCatalog();
@@ -11,7 +12,11 @@ export function getStaticPaths() {
 const catalog = loadCatalog();
 const set = catalog.setById.get(Astro.params.setId ?? "");
 if (!set) throw new Error("Missing set");
+const shop = verifiedPrice(set.id, "mail-order");
+const description = shop
+  ? `${set.name}, set ${set.id}, released ${set.year}. A verified US Shop at Home catalog price is recorded. Store MSRP and current market value are unavailable.`
+  : `${set.name}, set ${set.id}, released ${set.year}. Prices are unavailable unless a verified observation is stored.`;
 ---
-<Base title={`${set.name} (${set.id})`} description={`${set.name}, set ${set.id}, released ${set.year}. Prices are unavailable unless a verified observation is stored.`}>
+<Base title={`${set.name} (${set.id})`} description={description}>
   <SetDetail catalog={catalog} set={set} />
 </Base>

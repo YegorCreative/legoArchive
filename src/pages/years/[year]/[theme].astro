@@ -1,8 +1,9 @@
 ---
 import SetCard from "../../../components/SetCard.astro";
 import Base from "../../../layouts/Base.astro";
-import { groupByRootTheme, rootTheme, setsInYear } from "../../../lib/catalog";
+import { rootTheme, setsInYear } from "../../../lib/catalog";
 import { href } from "../../../lib/href";
+import { coverageLabel, countVerified } from "../../../lib/price-coverage";
 import { loadCatalog } from "../../../lib/load-catalog";
 
 export function getStaticPaths() {
@@ -23,11 +24,14 @@ const sets = theme
   ? setsInYear(catalog, year).filter((set) => rootTheme(set.themeId, catalog.themeById)?.id === theme.id)
   : [];
 if (!theme) throw new Error("Missing theme");
+const ids = sets.map((set) => set.id);
+const msrpCount = countVerified(ids, "original-retail");
+const mailCount = countVerified(ids, "mail-order");
 ---
 <Base title={`${theme.name} in ${year}`} description={`${theme.name} sets recorded for ${year}.`}>
   <p class="eyebrow"><a href={href(`years/${year}/`)}>{year}</a> · <a href={href(`themes/${theme.slug}/`)}>{theme.name}</a></p>
   <h1 class="lede">{theme.name} in {year}</h1>
-  <p class="deck">{sets.length} sets in this snapshot whose Rebrickable root theme is {theme.name}. The same records are listed on the {year} year page.</p>
+  <p class="deck">{sets.length} sets in this snapshot whose Rebrickable root theme is {theme.name}. The same records are listed on the {year} year page. Verified store MSRP: {coverageLabel(msrpCount, sets.length)}. Verified Shop at Home prices: {coverageLabel(mailCount, sets.length)}. Current market estimates: unavailable.</p>
   <div class="card-grid">
     {sets.map((set) => <SetCard set={set} catalog={catalog} root={theme} />)}
   </div>

@@ -15,6 +15,7 @@ export async function mountSearch(node: HTMLElement): Promise<void> {
   const form = node.querySelector("form");
   if (!(status instanceof HTMLElement) || !(results instanceof HTMLElement) || !(form instanceof HTMLFormElement)) return;
   const base = node.dataset.base || "/";
+  const shopPrices = JSON.parse(node.dataset.shop || "{}") as Record<string, { amount: number; currency: string }>;
   status.textContent = "Loading the search index…";
   const response = await fetch(node.dataset.catalog || "");
   if (!response.ok) {
@@ -87,7 +88,7 @@ export async function mountSearch(node: HTMLElement): Promise<void> {
     if (priceSort) {
       results.append(Object.assign(document.createElement("p"), {
         className: "notice",
-        textContent: "Original price and market value cannot be sorted yet. No verified prices are in this snapshot, and missing prices are not treated as zero.",
+        textContent: "Original price and market value cannot be sorted yet. Shop at Home catalog prices are not treated as store MSRP, and missing prices are not treated as zero.",
       }));
     }
     const grid = document.createElement("div");
@@ -106,7 +107,13 @@ export async function mountSearch(node: HTMLElement): Promise<void> {
         Object.assign(document.createElement("h3"), { textContent: record.name }),
         Object.assign(document.createElement("p"), { className: "meta", textContent: `${record.id} · ${record.year}` }),
         Object.assign(document.createElement("p"), { textContent: record.parts == null ? "Piece count unavailable" : `${record.parts.toLocaleString("en-US")} pieces` }),
-        Object.assign(document.createElement("p"), { className: "quiet", textContent: "Retail price unavailable" }),
+        Object.assign(document.createElement("p"), { className: "quiet", textContent: "Store MSRP unavailable" }),
+        ...(shopPrices[record.id]
+          ? [Object.assign(document.createElement("p"), {
+              className: "quiet",
+              textContent: `Shop at Home ${new Intl.NumberFormat("en-US", { style: "currency", currency: shopPrices[record.id].currency }).format(shopPrices[record.id].amount)}`,
+            })]
+          : []),
       );
       anchor.append(body);
       article.append(anchor);

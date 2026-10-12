@@ -16,9 +16,9 @@ const catalog = loadCatalog();
     <ul>
       {catalog.snapshot.limitations.map((item) => <li>{item}</li>)}
     </ul>
-    <p>BrickLink was not used. Its catalog terms do not grant this project a bulk price feed, and historical prices were not scraped.</p>
+    <p>BrickLink was not queried. Its Store API is limited to registered sellers, and this archive does not have credentials or permission to republish a price guide. The research note is in the repository file <code>docs/pricing.md</code>.</p>
     <h2>Prices</h2>
-    <p>The price model can store an original retail price, separate new and used estimates, currency, market, date, source, and verification. Until those observations are entered from a permitted source, every price field reads “Unavailable.” Unknown numbers are not treated as zero.</p>
+    <p>Fourteen prices were read from the Fall 1999 United States LEGO Shop at Home catalog on the Internet Archive. That issue says its prices include regular shipping and handling, so they are stored as mail-order prices, not as store MSRP. Store MSRP, current sealed value, and current used value still read “Unavailable” unless a separate verified observation exists. Unknown numbers are not treated as zero.</p>
     <h2>Set numbers</h2>
     <p>The canonical URL uses Rebrickable’s full set number, such as <code>7140-1</code>, because hundreds of printed numbers have more than one catalog record. A short number with only one match still resolves in the set viewer.</p>
     <h2>Brick Legends</h2>

@@ -1,9 +1,12 @@
 ---
 import Base from "../layouts/Base.astro";
+import { rootTheme } from "../lib/catalog";
+import { formatCount } from "../lib/format";
 import { adjustPurchasingPower, cpiSeries, cpiValue, latestCompleteCpiYear } from "../lib/inflation";
 import { href } from "../lib/href";
-import { pricesFor } from "../lib/price-index";
-import { formatMoney } from "../lib/pricing";
+import { allPrices } from "../lib/price-index";
+import { coverageLabel, pricedRows, sampleMean, type CoveredSet } from "../lib/price-coverage";
+import { formatMoney, type PriceObservation } from "../lib/pricing";
 import { loadCatalog } from "../lib/load-catalog";
 
 const catalog = loadCatalog();
@@ -12,40 +15,183 @@ const latest = latestCompleteCpiYear();
 const dollar1999 = adjustPurchasingPower(1, 1999, latest);
 const index1999 = cpiValue(1999);
 const indexLatest = latest == null ? null : cpiValue(latest);
-const verified = catalog.sets.filter((set) => pricesFor(set.id).some((price) => price.verification === "verified"));
+const covered: CoveredSet[] = catalog.sets.map((set) => ({ id: set.id, name: set.name, year: set.year, parts: set.parts }));
+const msrp = pricedRows(covered, "original-retail");
+const mail = pricedRows(covered, "mail-order");
+const sealed = pricedRows(covered, "market-new");
+const used = pricedRows(covered, "market-used");
+const incomplete = pricedRows(covered, "market-incomplete");
+const auctions = pricedRows(covered, "auction-sale");
+const verifiedIds = new Set(allPrices().filter((price) => price.verification === "verified").map((price) => price.setId));
+const mailMean = sampleMean(mail);
+const maxMail = mail[0]?.price.amount ?? 0;
+
+const decadeRows = [...new Set(catalog.sets.map((set) => Math.floor(set.year / 10) * 10))]
+  .sort((a, b) => a - b)
+  .map((decade) => {
+    const sets = catalog.sets.filter((set) => Math.floor(set.year / 10) * 10 === decade);
+    const priced = sets.filter((set) => mail.some((row) => row.set.id === set.id)).length;
+    return { decade, total: sets.length, priced };
+  });
+
+const themeRows = new Map<string, { name: string; slug: string; total: number; priced: PriceObservation[]; highest: number }>();
+for (const set of catalog.sets) {
+  const root = rootTheme(set.themeId, catalog.themeById);
+  if (!root) continue;
+  const row = themeRows.get(root.id) ?? { name: root.name, slug: root.slug, total: 0, priced: [], highest: 0 };
+  row.total += 1;
+  const price = mail.find((item) => item.set.id === set.id)?.price;
+  if (price) {
+    row.priced.push(price);
+    if (price.amount > row.highest) row.highest = price.amount;
+  }
+  themeRows.set(root.id, row);
+}
+const themesWithPrices = [...themeRows.values()].filter((row) => row.priced.length > 0).sort((a, b) => b.highest - a.highest || a.name.localeCompare(b.name));
 ---
-<Base title="Price archive" description="Original retail, market estimates, and US purchasing power stay in separate fields.">
+<Base title="Price archive" description="Verified Shop at Home catalog prices, with store MSRP and market values kept unavailable.">
   <p class="eyebrow">Price archive</p>
-  <h1 class="lede">Prices stay separate until they are verified</h1>
-  <p class="deck">Original retail, a sealed-market estimate, a used-market estimate, and an inflation adjustment are four different ideas. This page does not merge them into one number, and it does not rank sets while coverage is empty.</p>
+  <h1 class="lede">A small verified catalog sample</h1>
+  <p class="deck">This page keeps store MSRP, mail-order catalog prices, sealed values, used values, and purchasing power in separate fields. The sample below is {coverageLabel(mail.length, catalog.sets.length)} sets. It is not a ranking of the LEGO catalog.</p>
 
   <div class="stats">
-    <article class="stat"><b>{verified.length}</b><span>Sets with a verified price</span></article>
+    <article class="stat"><b>{formatCount(verifiedIds.size)}</b><span>Sets with any verified price</span></article>
+    <article class="stat"><b>{coverageLabel(msrp.length, catalog.sets.length)}</b><span>Verified store MSRP coverage</span></article>
+    <article class="stat"><b>{coverageLabel(mail.length, catalog.sets.length)}</b><span>Verified Shop at Home coverage</span></article>
+    <article class="stat"><b>{formatCount(sealed.length + used.length + incomplete.length + auctions.length)}</b><span>Current market observations</span></article>
     <article class="stat"><b>{series.observations.length}</b><span>Complete CPI-U years stored</span></article>
     <article class="stat"><b>{latest ?? "—"}</b><span>Latest complete index year</span></article>
   </div>
 
-  <section class="price-grid" style="grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));">
-    <article class="panel">
-      <h2>Original retail</h2>
-      <p>Unavailable</p>
-      <p class="quiet">A verified MSRP needs the set number, amount, currency, market, source, observation date, and a status of verified. A sale price from a retailer is not recorded as the original price.</p>
+  <section class="price-board">
+    <article class="panel price-card is-empty">
+      <h2>Most valuable sets</h2>
+      <p class="amount">Unavailable</p>
+      <p>Sealed, used, incomplete, and auction observations: {sealed.length}, {used.length}, {incomplete.length}, and {auctions.length}. No current market ranking is shown.</p>
     </article>
-    <article class="panel">
-      <h2>Sealed market estimate</h2>
-      <p>Unavailable</p>
-      <p class="quiet">No licensed current-market feed is connected. An estimate would be labeled as an estimate and would not be a guaranteed sale price.</p>
+    <article class="panel price-card is-empty">
+      <h2>Greatest appreciation</h2>
+      <p class="amount">Not calculated</p>
+      <p>Appreciation needs a verified store MSRP and a later market observation for the same set. Neither side of that pair is stored.</p>
     </article>
-    <article class="panel">
-      <h2>Used market estimate</h2>
-      <p>Unavailable</p>
-      <p class="quiet">Used and sealed values are stored as different observations. Neither is shown until a dated source exists.</p>
+    <article class="panel price-card is-empty">
+      <h2>Most expensive original releases</h2>
+      <p class="amount">Unavailable</p>
+      <p>Verified store MSRP coverage is {coverageLabel(msrp.length, catalog.sets.length)}. A Shop at Home price that includes shipping is not substituted for MSRP.</p>
     </article>
   </section>
 
   <section class="panel">
     <h2>Rankings are withheld</h2>
-    <p>Most valuable retired sets, greatest appreciation, highest original retail, and theme or year price boards need verified coverage. With {verified.length} verified set prices in the catalog, any such list would describe the gaps more than the market. No ranking is shown.</p>
+    <p>Most valuable retired sets, greatest appreciation, and highest original retail need verified coverage of the sets being ranked. With {coverageLabel(mail.length, catalog.sets.length)} Shop at Home prices and {msrp.length} store MSRP records, a global board would describe this sample as if it were the market. The table further down is the sample itself, labeled as such.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Shop at Home sample</h2>
+      <p class="quiet">{coverageLabel(mail.length, catalog.sets.length)} · United States · shipping included</p>
+    </div>
+    <p class="notice">Every amount was read from the Fall 1999 US LEGO Shop at Home catalog. The issue says its prices include regular shipping and handling. The average below uses only these {mail.length} prices. The other sets are left out, not treated as zero. {mailMean != null ? `That average is ${formatMoney(mailMean, "USD")}.` : "The average is withheld."} It does not describe 1999, or LEGO, as a whole.</p>
+    {mail.length > 0 ? (
+      <div class="table-wrap panel" style="padding: 0.4rem 0.8rem 0.8rem;">
+        <table class="price-table">
+          <caption class="sr">Fall 1999 US Shop at Home prices. Not a market ranking.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Set</th>
+              <th scope="col">Year</th>
+              <th scope="col">Catalog price</th>
+              <th scope="col">Per piece</th>
+              <th scope="col">Purchasing power</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mail.map((row) => (
+              <tr>
+                <td><a href={href(`sets/${row.set.id}/`)}>{row.set.name}</a><br /><span class="quiet">{row.set.id}</span></td>
+                <td>{row.set.year}</td>
+                <td>
+                  {formatMoney(row.price.amount, row.price.currency)}
+                  <span class="bar" style="display:grid; grid-template-columns: 1fr; margin-top: 0.35rem;" aria-hidden="true">
+                    <i style={`width:${Math.max(8, (row.price.amount / maxMail) * 100)}%`}></i>
+                  </span>
+                </td>
+                <td>{row.set.parts == null || row.perPiece == null ? "Unavailable" : formatMoney(row.perPiece, row.price.currency)}</td>
+                <td>{row.adjusted != null && row.comparisonYear != null ? `${formatMoney(row.adjusted, "USD")} in ${row.comparisonYear} dollars` : "Not calculated"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : <p>Unavailable. No verified catalog prices are stored.</p>}
+  </section>
+
+  <section>
+    <h2>Price per piece</h2>
+    <p>Catalog price divided by the snapshot piece count, for the same {coverageLabel(mail.length, catalog.sets.length)} sets. A catalog piece count that disagrees with the snapshot is not used. This is not an MSRP-per-piece ranking.</p>
+    {mail.some((row) => row.perPiece != null) ? (
+      <div class="table-wrap">
+        <table class="price-table">
+          <thead>
+            <tr><th scope="col">Set</th><th scope="col">Pieces in the snapshot</th><th scope="col">Catalog price per piece</th></tr>
+          </thead>
+          <tbody>
+            {mail.filter((row) => row.perPiece != null).sort((a, b) => (b.perPiece ?? 0) - (a.perPiece ?? 0) || a.set.id.localeCompare(b.set.id)).map((row) => (
+              <tr>
+                <td><a href={href(`sets/${row.set.id}/`)}>{row.set.name}</a></td>
+                <td>{formatCount(row.set.parts)}</td>
+                <td>{formatMoney(row.perPiece, row.price.currency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : <p>Unavailable.</p>}
+  </section>
+
+  <section>
+    <h2>Coverage by decade</h2>
+    <p>These are counts of verified Shop at Home prices, not a trend in what LEGO charged. Decades with no verified price stay at zero coverage. They are not drawn as a price line.</p>
+    <div class="table-wrap">
+      <table class="price-table">
+        <thead>
+          <tr><th scope="col">Decade</th><th scope="col">Documented sets</th><th scope="col">Verified Shop at Home prices</th></tr>
+        </thead>
+        <tbody>
+          {decadeRows.map((row) => (
+            <tr>
+              <td>{row.decade}s</td>
+              <td>{formatCount(row.total)}</td>
+              <td>{coverageLabel(row.priced, row.total)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Themes in the sample</h2>
+    <p>Only themes that appear in the verified sample are listed. Town and City stay separate. A theme with no row here has no verified price in this release. This is not a ranking of the most collectible themes.</p>
+    {themesWithPrices.length === 0 ? <p>Unavailable.</p> : (
+      <div class="table-wrap">
+        <table class="price-table">
+          <thead>
+            <tr><th scope="col">Theme</th><th scope="col">Verified catalog prices</th><th scope="col">Highest catalog price in the sample</th></tr>
+          </thead>
+          <tbody>
+            {themesWithPrices.map((row) => (
+              <tr>
+                <td><a href={href(`themes/${row.slug}/`)}>{row.name}</a></td>
+                <td>{coverageLabel(row.priced.length, row.total)}</td>
+                <td>{formatMoney(row.highest, "USD")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+    <p class="quiet" style="margin-top: 0.8rem;">Current market estimates by theme: unavailable. The market count is {sealed.length + used.length + incomplete.length + auctions.length}.</p>
   </section>
 
   <section class="prose">
@@ -59,7 +205,7 @@ const verified = catalog.sets.filter((set) => pricesFor(set.id).some((price) => 
     {series.partialYearsOmitted.length > 0 && (
       <p>These years were returned with fewer than twelve numeric months and are not used: {series.partialYearsOmitted.map((row) => `${row.year} (${row.months} months)`).join(", ")}. October 2025 is marked unavailable by BLS because of a lapse in appropriations. That month is not estimated.</p>
     )}
-    <p>A set page will show an inflation-adjusted original price only when that set has a verified US-dollar retail amount whose year is in this series, compared with {latest ?? "a complete year"}. The result is purchasing power, not collectible appreciation. Details are in the repository note <a href="https://github.com/YegorCreative/legoArchive/blob/main/docs/pricing.md">docs/pricing.md</a>.</p>
-    <p><a href={href("sets/7140-1/")}>The 1999 X-wing set page</a> still shows every price field as unavailable.</p>
+    <p>Where a set has a verified US Shop at Home price, its page shows what that catalog amount would buy in {latest ?? "the latest complete"} dollars. Where a verified US store MSRP exists, the page shows that adjustment separately. Neither figure is a collectible value. Details are in the repository note <a href="https://github.com/YegorCreative/legoArchive/blob/main/docs/pricing.md">docs/pricing.md</a>.</p>
+    <p><a href={href("sets/7140-1/")}>The 1999 X-wing set page</a> records a Shop at Home catalog price and still leaves the store MSRP and the market value unavailable.</p>
   </section>
 </Base>

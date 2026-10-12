@@ -4,6 +4,8 @@ import Base from "../../../layouts/Base.astro";
 import { groupByRootTheme, largestSet, pieceStats, setsInYear } from "../../../lib/catalog";
 import { formatCount } from "../../../lib/format";
 import { href } from "../../../lib/href";
+import { coverageLabel, pricedRows, sampleMean } from "../../../lib/price-coverage";
+import { formatMoney } from "../../../lib/pricing";
 import { loadCatalog } from "../../../lib/load-catalog";
 
 export function getStaticPaths() {
@@ -20,6 +22,12 @@ const largest = largestSet(sets);
 const index = catalog.years.indexOf(year);
 const previous = catalog.years[index - 1];
 const next = catalog.years[index + 1];
+const covered = sets.map((set) => ({ id: set.id, name: set.name, year: set.year, parts: set.parts }));
+const msrp = pricedRows(covered, "original-retail");
+const mail = pricedRows(covered, "mail-order");
+const marketCount = pricedRows(covered, "market-new").length + pricedRows(covered, "market-used").length + pricedRows(covered, "market-incomplete").length + pricedRows(covered, "auction-sale").length;
+const mailMean = sampleMean(mail);
+const highestMail = mail[0] ?? null;
 ---
 <Base title={`LEGO in ${year}`} description={`Documented LEGO sets from ${year} in the Rebrickable snapshot.`}>
   <p class="eyebrow">Year archive</p>
@@ -30,11 +38,15 @@ const next = catalog.years[index + 1];
     <div class="stat"><b>{formatCount(groups.length)}</b><span>Root themes</span></div>
     <div class="stat"><b>{formatCount(pieces.total)}</b><span>Pieces where a count is recorded</span></div>
     <div class="stat"><b>{formatCount(pieces.unknown)}</b><span>Sets with no piece count</span></div>
-    <div class="stat"><b>Unavailable</b><span>Most expensive at original retail</span></div>
+    <div class="stat"><b>{coverageLabel(msrp.length, sets.length)}</b><span>Verified store MSRP</span></div>
+    <div class="stat"><b>{coverageLabel(mail.length, sets.length)}</b><span>Verified Shop at Home prices</span></div>
+    <div class="stat"><b>{msrp[0] ? msrp[0].set.name : "Unavailable"}</b><span>Most expensive verified store MSRP{msrp[0] ? `: ${formatMoney(msrp[0].price.amount, msrp[0].price.currency)}` : ""}</span></div>
+    <div class="stat"><b>{highestMail ? highestMail.set.name : "Unavailable"}</b><span>Highest Shop at Home price in this sample{highestMail ? `: ${formatMoney(highestMail.price.amount, highestMail.price.currency)}` : ""}</span></div>
+    <div class="stat"><b>{mailMean != null ? formatMoney(mailMean, mail[0]?.price.currency ?? "USD") : "Not calculated"}</b><span>Average of the verified Shop at Home prices only</span></div>
     <div class="stat"><b>{largest ? largest.name : "Unavailable"}</b><span>Largest recorded piece count{largest?.parts ? `: ${formatCount(largest.parts)}` : ""}</span></div>
     <div class="stat"><b>Unavailable</b><span>Most valuable today</span></div>
   </div>
-  <p>Original retail prices and current market values are not in this snapshot, so those highlights stay unavailable. {pieces.unknown > 0 ? `${formatCount(pieces.unknown)} sets have no recorded piece count and are left out of the piece total.` : ""}</p>
+  <p>Verified retail pricing: {coverageLabel(msrp.length, sets.length)} sets have a store MSRP, and {coverageLabel(mail.length, sets.length)} have a Shop at Home catalog price. Current market observations this year: {marketCount}. {mail.length > 0 ? `The average uses those ${mail.length} catalog prices and ignores every set without one. It is not the average price of ${year}.` : "No average is calculated, because missing prices are not treated as zero."} {msrp.length === 0 ? "The most expensive original release stays unavailable until a store MSRP is verified." : ""} {pieces.unknown > 0 ? `${formatCount(pieces.unknown)} sets have no recorded piece count and are left out of the piece total.` : ""}</p>
   {year === 1999 && <p><a href={href("stories/beginning-of-lego-star-wars/")}>Historical note: the beginning of LEGO Star Wars, with sources.</a></p>}
   <nav class="year-picker" aria-label="Adjacent years">
     {previous && <a class="chip" href={href(`years/${previous}/`)}>{previous}</a>}
