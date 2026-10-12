@@ -13,6 +13,17 @@ const fullTitle = title === "LEGO Archive" ? title : `${title} · LEGO Archive`;
 const path = Astro.url.pathname;
 const current = (target: string) => path === href(target);
 const canonical = new URL(path, Astro.site);
+const primary = [
+  { to: "years/", label: "Years" },
+  { to: "themes/", label: "Themes" },
+  { to: "search/", label: "Search" },
+  { to: "price-archive/", label: "Price archive" },
+  { to: "timeline/", label: "Timeline" },
+  { to: "stories/", label: "Stories" },
+  { to: "brick-legends/", label: "Brick Legends" },
+  { to: "about/", label: "About" },
+];
+const here = (to: string) => (to === "brick-legends/" ? path.includes("/brick-legends/") : current(to));
 ---
 <!doctype html>
 <html lang="en">
@@ -34,17 +45,17 @@ const canonical = new URL(path, Astro.site);
         <strong>LEGO ARCHIVE</strong>
         <span>Every set. Every year. Every story.</span>
       </a>
+      <nav class="site-nav primary-bar" aria-label="Primary">
+        {primary.map((item) => (
+          <a href={href(item.to)} aria-current={here(item.to) ? "page" : undefined}>{item.label}</a>
+        ))}
+      </nav>
       <details class="nav-pop">
         <summary>Menu</summary>
         <nav class="site-nav" aria-label="Primary">
-          <a href={href("years/")} aria-current={current("years/") ? "page" : undefined}>Years</a>
-          <a href={href("themes/")} aria-current={current("themes/") ? "page" : undefined}>Themes</a>
-          <a href={href("search/")} aria-current={current("search/") ? "page" : undefined}>Search</a>
-          <a href={href("price-archive/")} aria-current={current("price-archive/") ? "page" : undefined}>Price archive</a>
-          <a href={href("timeline/")} aria-current={current("timeline/") ? "page" : undefined}>Timeline</a>
-          <a href={href("stories/")} aria-current={current("stories/") ? "page" : undefined}>Stories</a>
-          <a href={href("brick-legends/")} aria-current={path.includes("/brick-legends/") ? "page" : undefined}>Brick Legends</a>
-          <a href={href("about/")} aria-current={current("about/") ? "page" : undefined}>About</a>
+          {primary.map((item) => (
+            <a href={href(item.to)} aria-current={here(item.to) ? "page" : undefined}>{item.label}</a>
+          ))}
         </nav>
       </details>
     </header>
