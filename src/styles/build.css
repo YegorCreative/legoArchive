@@ -24,14 +24,15 @@
 
 .model-slot { position: relative; width: min(100%, 36rem); margin-inline: auto; }
 .gate-slot {
-  width: min(100%, 40rem);
+  width: 100%;
   transform: translate3d(calc(var(--px, 0) * 16px), calc(var(--py, 0) * 10px), 0);
 }
 .rocket-slot {
-  width: min(100%, 32rem);
-  justify-self: center;
+  width: min(100%, 40rem);
+  justify-self: end;
   transform: translate3d(calc(var(--px, 0) * -14px), calc(var(--py, 0) * 8px), 0);
 }
+.loose-fact { pointer-events: auto; }
 
 .iso-still .iso-brick { animation: none; }
 .loose-fact {
@@ -101,7 +102,7 @@
   align-items: center;
 }
 @media (min-width: 900px) {
-  .space-layout { grid-template-columns: minmax(16rem, 0.9fr) minmax(16rem, 0.85fr); }
+  .space-layout { grid-template-columns: minmax(16rem, 0.72fr) minmax(20rem, 1.28fr); align-items: end; }
 }
 .space-room h2 { margin: 0; color: #ffd500; font-size: clamp(2.2rem, 5vw, 4rem); }
 .space-room .space-copy p { max-width: 38rem; color: #d7e6ff; }
@@ -123,20 +124,25 @@
 .plinth-art { display: block; width: 100%; height: auto; }
 .stand-subject {
   position: absolute;
-  left: var(--ax);
-  top: var(--ay);
-  z-index: 2;
-  width: min(42%, 9.5rem);
-  transform: translate(-50%, -82%);
+  left: 52%;
+  top: 54%;
+  width: 28%;
+  margin: 0;
   display: grid;
   justify-items: center;
+  pointer-events: none;
+  transform: translate(-50%, -46%);
+  mix-blend-mode: multiply;
 }
+.stand-subject .shot,
+.stand-subject .shot-zoom,
+.stand-subject a,
+.stand-subject button { pointer-events: auto; }
 .stand-subject img {
   width: auto;
   max-width: 100%;
-  max-height: 6.4rem;
+  max-height: 9rem;
   object-fit: contain;
-  filter: drop-shadow(0 0.65rem 0 rgba(20, 16, 8, 0.28)) drop-shadow(0 0.9rem 0.45rem rgba(20, 16, 8, 0.2));
 }
 .set-hero .display-stand .shot,
 .set-hero .display-stand .shot-zoom {
@@ -157,7 +163,7 @@
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: 8.5rem;
+  max-height: 13rem;
 }
 .display-stand .shot-hint {
   top: 0.35rem;
@@ -182,7 +188,7 @@
   .gate-slot, .rocket-slot { width: min(100%, 24rem); }
   .fact-pop { max-width: min(16rem, 70vw); }
   .space-room { padding-inline: 1rem; }
-  .stand-subject { width: min(64%, 13rem); }
+  .stand-subject { width: 40%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

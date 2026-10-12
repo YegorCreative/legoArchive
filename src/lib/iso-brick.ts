@@ -150,7 +150,7 @@ export function project(bricks: Brick[], headroom = 0): IsoLayout {
         }
       }
     }
-    if (brick.anchor) anchor = pt(x + w / 2, y + d / 2, z + h);
+    if (brick.anchor) anchor = pt(x + w / 2, y + d * 0.42, z + h);
 
     let left = "";
     let right = "";

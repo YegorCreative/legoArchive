@@ -89,4 +89,4 @@ export function displayPlinth(): Brick[] {
   ];
 }
 
-export const PLINTH_HEADROOM = 210;
+export const PLINTH_HEADROOM = 28;
