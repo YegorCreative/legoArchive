@@ -45,7 +45,7 @@ const marketCount = sealed.length + used.length + pricedRows(covered, "market-in
 ---
 <Base title={theme.name} description={`${theme.name} in the LEGO Archive snapshot.`}>
   <p class="eyebrow">{parent ? <a href={href(`themes/${parent.slug}/`)}>{parent.name}</a> : "Root theme"}</p>
-  <header class="theme-hero">
+  <header class="theme-hero" data-theme={theme.slug}>
     <h1 class="lede">{theme.name}</h1>
     <p class="notice">No curated historical essay is published for this theme yet, except where a story is linked. The facts below are counted from the Rebrickable snapshot of {catalog.snapshot.retrievedAt.slice(0, 10)}. This page does not merge this theme with any other root theme.</p>
   </header>

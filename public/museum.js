@@ -31,20 +31,30 @@
     dialog.showModal();
   });
 
-  const hero = document.querySelector("[data-parallax]");
-  if (hero instanceof HTMLElement && !reduce) {
+  const scenes = [...document.querySelectorAll("[data-scene], [data-parallax]")];
+  if (!reduce && scenes.length > 0) {
+    const fine = window.matchMedia("(pointer: fine)").matches;
     const onScroll = () => {
-      const next = Math.max(0, Math.min(1, window.scrollY / 700));
-      hero.style.setProperty("--scroll", next.toFixed(3));
+      for (const scene of scenes) {
+        if (!(scene instanceof HTMLElement)) continue;
+        const box = scene.getBoundingClientRect();
+        const through = Math.max(0, Math.min(1, -box.top / Math.max(scene.offsetHeight * 0.85, 1)));
+        const seen = Math.max(0, Math.min(1, (window.innerHeight * 0.9 - box.top) / (window.innerHeight * 0.55 + scene.offsetHeight * 0.25)));
+        scene.style.setProperty("--scroll", through.toFixed(3));
+        scene.style.setProperty("--p", seen.toFixed(3));
+      }
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    if (window.matchMedia("(pointer: fine)").matches) {
-      hero.addEventListener("pointermove", (event) => {
-        const box = hero.getBoundingClientRect();
-        hero.style.setProperty("--px", ((event.clientX - box.left) / box.width - 0.5).toFixed(3));
-        hero.style.setProperty("--py", ((event.clientY - box.top) / box.height - 0.5).toFixed(3));
-      });
+    if (fine) {
+      for (const scene of scenes) {
+        if (!(scene instanceof HTMLElement) || !scene.hasAttribute("data-parallax")) continue;
+        scene.addEventListener("pointermove", (event) => {
+          const box = scene.getBoundingClientRect();
+          scene.style.setProperty("--px", ((event.clientX - box.left) / box.width - 0.5).toFixed(3));
+          scene.style.setProperty("--py", ((event.clientY - box.top) / box.height - 0.5).toFixed(3));
+        });
+      }
     }
   }
 

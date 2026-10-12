@@ -1,7 +1,7 @@
 ---
 import SetCard from "../../../components/SetCard.astro";
 import Base from "../../../layouts/Base.astro";
-import { groupByRootTheme, largestSet, pieceStats, setsInYear } from "../../../lib/catalog";
+import { decadeOf, groupByRootTheme, largestSet, pieceStats, setsInYear } from "../../../lib/catalog";
 import { formatCount } from "../../../lib/format";
 import { href } from "../../../lib/href";
 import { coverageLabel, pricedRows, sampleMean } from "../../../lib/price-coverage";
@@ -30,8 +30,10 @@ const mailMean = sampleMean(mail);
 const highestMail = mail[0] ?? null;
 ---
 <Base title={`LEGO in ${year}`} description={`Documented LEGO sets from ${year} in the Rebrickable snapshot.`}>
-  <p class="eyebrow">Year archive</p>
-  <h1 class="lede">LEGO in {year}</h1>
+  <header class="year-banner" data-decade={decadeOf(year)}>
+    <p class="eyebrow">Year archive</p>
+    <h1 class="lede">LEGO in {year}</h1>
+  </header>
   <p class="notice">These figures count records in the Rebrickable snapshot dated {catalog.snapshot.retrievedAt.slice(0, 10)}. They are not a certificate that every set released in {year} is listed.</p>
   <div class="stats">
     <div class="stat"><b>{formatCount(sets.length)}</b><span>Documented sets</span></div>

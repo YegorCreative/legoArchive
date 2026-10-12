@@ -30,7 +30,7 @@ const decades = [...groups.entries()].sort((a, b) => a[0] - b[0]);
   <p class="deck">This timeline lists every year in the {catalog.snapshot.retrievedAt.slice(0, 10)} snapshot, from {catalog.years[0]} through {catalog.years[catalog.years.length - 1]}. Gallery titles such as “New worlds” are editorial labels, not historical classifications. Scroll sideways, or use the arrow keys while this track is focused. The page itself still scrolls normally.</p>
   <div class="exhibit-track" data-timeline tabindex="0" aria-label="Decades in the snapshot">
     {decades.map(([decade, group]) => (
-      <article class="exhibit-stop">
+      <article class="exhibit-stop world-stop" data-decade={decade}>
         <p class="eyebrow">{decade}s</p>
         <h2>{galleryTitle(decade)}</h2>
         <p class="quiet">Editorial gallery title.</p>
