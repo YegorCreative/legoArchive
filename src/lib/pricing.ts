@@ -21,9 +21,14 @@ export interface PriceObservation {
   note: string | null;
 }
 
-export function percentChange(original: number | null, current: number | null): number | null {
+export function percentChange(
+  original: number | null,
+  current: number | null,
+  currencies?: { from: string | null; to: string | null },
+): number | null {
   if (original == null || current == null) return null;
   if (!Number.isFinite(original) || !Number.isFinite(current) || original <= 0) return null;
+  if (currencies?.from && currencies?.to && currencies.from !== currencies.to) return null;
   return ((current - original) / original) * 100;
 }
 

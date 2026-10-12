@@ -24,7 +24,11 @@ const themes = catalog.themes
   <p class="eyebrow">Themes</p>
   <h1 class="lede">Themes, as recorded</h1>
   <p class="deck">Root themes follow Rebrickable’s parent chain. Town stays Town. City stays City. Names are not rewritten to match later branding.</p>
-  <div class="theme-grid">
+  <label>Find a theme
+    <input id="theme-filter" type="search" placeholder="Town, City, Castle" autocomplete="off" />
+  </label>
+  <p id="theme-count" class="quiet" aria-live="polite">{themes.length} themes</p>
+  <div class="theme-grid" id="theme-grid">
     {themes.map((theme) => {
       const info = counts.get(theme.id);
       return (
@@ -37,3 +41,20 @@ const themes = catalog.themes
     })}
   </div>
 </Base>
+<script>
+  const filter = document.querySelector("#theme-filter");
+  const grid = document.querySelector("#theme-grid");
+  const count = document.querySelector("#theme-count");
+  if (filter instanceof HTMLInputElement && grid instanceof HTMLElement && count) {
+    filter.addEventListener("input", () => {
+      const query = filter.value.trim().toLowerCase();
+      let visible = 0;
+      for (const tile of grid.querySelectorAll("a")) {
+        const show = tile.textContent?.toLowerCase().includes(query) ?? false;
+        tile.hidden = !show;
+        if (show) visible += 1;
+      }
+      count.textContent = query ? `${visible} themes match` : `${grid.querySelectorAll("a").length} themes`;
+    });
+  }
+</script>

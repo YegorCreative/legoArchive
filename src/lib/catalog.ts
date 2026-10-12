@@ -36,6 +36,14 @@ interface RawCatalog {
   sets: [string, string, number, string, number | null][];
 }
 
+export interface CatalogIndexes {
+  rootIdByTheme: Map<string, string | null>;
+  byPrinted: Map<string, SetRecord[]>;
+  byYearRoot: Map<string, SetRecord[]>;
+  byRoot: Map<string, SetRecord[]>;
+  byTheme: Map<string, SetRecord[]>;
+}
+
 export interface LoadedCatalog {
   snapshot: SnapshotMeta;
   themes: ThemeRecord[];
@@ -45,6 +53,7 @@ export interface LoadedCatalog {
   setById: Map<string, SetRecord>;
   years: number[];
   prerenderIds: Set<string>;
+  indexes: CatalogIndexes;
 }
 
 export function buildCatalog(raw: RawCatalog): LoadedCatalog {
@@ -66,7 +75,38 @@ export function buildCatalog(raw: RawCatalog): LoadedCatalog {
   const setById = new Map(sets.map((set) => [set.id, set]));
   const years = [...new Set(sets.map((set) => set.year))].sort((a, b) => a - b);
   const prerenderIds = prerenderIdSet(sets);
-  return { snapshot: raw.snapshot, themes, sets, themeById, themeBySlug, setById, years, prerenderIds };
+  const indexes = buildIndexes(sets, themeById);
+  return { snapshot: raw.snapshot, themes, sets, themeById, themeBySlug, setById, years, prerenderIds, indexes };
+}
+
+function buildIndexes(sets: SetRecord[], themeById: Map<string, ThemeRecord>): CatalogIndexes {
+  const rootIdByTheme = new Map<string, string | null>();
+  const rootOf = (themeId: string) => {
+    const cached = rootIdByTheme.get(themeId);
+    if (cached !== undefined) return cached;
+    const id = rootTheme(themeId, themeById)?.id ?? null;
+    rootIdByTheme.set(themeId, id);
+    return id;
+  };
+  const byPrinted = new Map<string, SetRecord[]>();
+  const byYearRoot = new Map<string, SetRecord[]>();
+  const byRoot = new Map<string, SetRecord[]>();
+  const byTheme = new Map<string, SetRecord[]>();
+  const push = (map: Map<string, SetRecord[]>, key: string, set: SetRecord) => {
+    const list = map.get(key);
+    if (list) list.push(set);
+    else map.set(key, [set]);
+  };
+  for (const set of sets) {
+    push(byPrinted, printedNumber(set.id), set);
+    const rootId = rootOf(set.themeId);
+    if (rootId) {
+      push(byYearRoot, `${set.year}:${rootId}`, set);
+      push(byRoot, rootId, set);
+    }
+    push(byTheme, set.themeId, set);
+  }
+  return { rootIdByTheme, byPrinted, byYearRoot, byRoot, byTheme };
 }
 
 export function imageUrl(snapshot: SnapshotMeta, setId: string): string {
@@ -141,7 +181,7 @@ export function setsInYear(catalog: LoadedCatalog, year: number): SetRecord[] {
 }
 
 export function setsForRoot(catalog: LoadedCatalog, rootId: string): SetRecord[] {
-  return catalog.sets.filter((set) => rootTheme(set.themeId, catalog.themeById)?.id === rootId);
+  return catalog.indexes.byRoot.get(rootId) ?? [];
 }
 
 export function directChildren(catalog: LoadedCatalog, themeId: string): ThemeRecord[] {
@@ -158,28 +198,39 @@ export function subthemeName(set: SetRecord, catalog: LoadedCatalog, root: Theme
 
 export interface RelatedSets {
   variants: SetRecord[];
+  variantMore: number;
   sameYear: SetRecord[];
   sameTheme: SetRecord[];
   sameSubtheme: SetRecord[];
 }
 
+const RELATED_LIMIT = 8;
+
 export function relatedSets(catalog: LoadedCatalog, set: SetRecord): RelatedSets {
   const printed = printedNumber(set.id);
-  const root = rootTheme(set.themeId, catalog.themeById);
-  const variants = catalog.sets.filter((other) => other.id !== set.id && printedNumber(other.id) === printed);
-  const sameYear = catalog.sets
-    .filter((other) => other.id !== set.id && other.year === set.year && rootTheme(other.themeId, catalog.themeById)?.id === root?.id)
-    .slice(0, 6);
-  const sameTheme = root
-    ? catalog.sets
-        .filter((other) => other.id !== set.id && other.year !== set.year && rootTheme(other.themeId, catalog.themeById)?.id === root.id)
-        .slice(0, 6)
+  const rootId = catalog.indexes.rootIdByTheme.get(set.themeId) ?? null;
+  const variantAll = (catalog.indexes.byPrinted.get(printed) ?? []).filter((other) => other.id !== set.id);
+  const sameYear = (rootId ? catalog.indexes.byYearRoot.get(`${set.year}:${rootId}`) ?? [] : [])
+    .filter((other) => other.id !== set.id)
+    .slice(0, RELATED_LIMIT);
+  const sameTheme = rootId
+    ? (catalog.indexes.byRoot.get(rootId) ?? [])
+        .filter((other) => other.id !== set.id && other.year !== set.year)
+        .slice(0, RELATED_LIMIT)
     : [];
   const sameSubtheme =
-    catalog.themeById.get(set.themeId)?.id === root?.id
+    !rootId || set.themeId === rootId
       ? []
-      : catalog.sets.filter((other) => other.id !== set.id && other.themeId === set.themeId).slice(0, 6);
-  return { variants, sameYear, sameTheme, sameSubtheme };
+      : (catalog.indexes.byTheme.get(set.themeId) ?? [])
+          .filter((other) => other.id !== set.id)
+          .slice(0, RELATED_LIMIT);
+  return {
+    variants: variantAll.slice(0, RELATED_LIMIT),
+    variantMore: Math.max(0, variantAll.length - RELATED_LIMIT),
+    sameYear,
+    sameTheme,
+    sameSubtheme,
+  };
 }
 
 export function decadeHighlights(catalog: LoadedCatalog): { decade: number; set: SetRecord }[] {
@@ -187,7 +238,10 @@ export function decadeHighlights(catalog: LoadedCatalog): { decade: number; set:
 }
 
 export function variantChoices(catalog: LoadedCatalog, printed: string): SetRecord[] {
-  return catalog.sets.filter((set) => printedNumber(set.id) === printed || set.id === printed);
+  const matches = catalog.indexes.byPrinted.get(printed) ?? [];
+  const exact = catalog.setById.get(printed);
+  if (exact && !matches.some((set) => set.id === exact.id)) return [...matches, exact];
+  return matches;
 }
 
 export { largestByDecade };

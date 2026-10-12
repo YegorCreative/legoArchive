@@ -1,5 +1,4 @@
 ---
-import prices from "../data/prices.json";
 import {
   imageUrl,
   printedNumber,
@@ -10,6 +9,7 @@ import {
 } from "../lib/catalog";
 import { formatCount } from "../lib/format";
 import { href } from "../lib/href";
+import { priceOf } from "../lib/price-index";
 import { formatMoney, formatPercent, percentChange, pricePerPiece, type PriceObservation } from "../lib/pricing";
 
 interface Props {
@@ -20,24 +20,34 @@ const { catalog, set } = Astro.props;
 const theme = catalog.themeById.get(set.themeId) ?? null;
 const root = rootTheme(set.themeId, catalog.themeById);
 const related = relatedSets(catalog, set);
-const observations = (prices as PriceObservation[]).filter((price) => price.setId === set.id);
-const original = observations.find((price) => price.kind === "original-retail") ?? null;
-const marketNew = observations.find((price) => price.kind === "market-new") ?? null;
-const marketUsed = observations.find((price) => price.kind === "market-used") ?? null;
-const change = percentChange(original?.amount ?? null, marketNew?.amount ?? null);
+const original = priceOf(set.id, "original-retail");
+const marketNew = priceOf(set.id, "market-new");
+const marketUsed = priceOf(set.id, "market-used");
+const observations = [original, marketNew, marketUsed].filter((price): price is PriceObservation => price != null);
+const change = percentChange(original?.amount ?? null, marketNew?.amount ?? null, {
+  from: original?.currency ?? null,
+  to: marketNew?.currency ?? null,
+});
 const datedPoints = observations.filter((price) => price.date).length;
+const inflation = original
+  ? "Not calculated. No published price index is stored for this currency and date."
+  : "Not calculated. There is no verified original price to adjust.";
+const moneyLine = (price: PriceObservation | null) =>
+  price
+    ? `${formatMoney(price.amount, price.currency)} · ${price.market ?? "Market not recorded"} · ${price.date ?? "Date not recorded"} · ${price.source} · ${price.verification}`
+    : "Unavailable";
 
 const groups = [
-  { title: "Other catalog records with the same printed number", note: "These share a printed number in the source file. They are not automatically earlier or later models.", sets: related.variants },
-  { title: root ? `More ${root.name} sets from ${set.year}` : `More sets from ${set.year}`, note: null, sets: related.sameYear },
-  { title: root ? `More from ${root.name}` : "More from this theme", note: null, sets: related.sameTheme },
-  { title: theme && theme.id !== root?.id ? `More in ${theme.name}` : "Same subtheme", note: null, sets: related.sameSubtheme },
+  { title: "Other catalog records with the same printed number", note: "These share a printed number in the source file. They are not automatically earlier or later models.", sets: related.variants, more: related.variantMore },
+  { title: root ? `More ${root.name} sets from ${set.year}` : `More sets from ${set.year}`, note: null, sets: related.sameYear, more: 0 },
+  { title: root ? `More from ${root.name}` : "More from this theme", note: null, sets: related.sameTheme, more: 0 },
+  { title: theme && theme.id !== root?.id ? `More in ${theme.name}` : "Same subtheme", note: null, sets: related.sameSubtheme, more: 0 },
 ];
 ---
 <article class="set-page">
   <header class="set-hero">
     <figure class="shot">
-      <img class="set-img" src={imageUrl(catalog.snapshot, set.id)} alt={`${set.name}, set ${set.id}`} width="800" height="800" decoding="async" />
+      <img class="set-img" src={imageUrl(catalog.snapshot, set.id)} alt={`${set.name}, set ${set.id}`} width="800" height="800" decoding="async" fetchpriority="high" />
     </figure>
     <div>
       <p class="eyebrow">{root?.name ?? "Theme unavailable"}{theme && theme.id !== root?.id ? ` · ${theme.name}` : ""}</p>
@@ -69,10 +79,10 @@ const groups = [
     <h2>Price information</h2>
     <p class="notice">Estimated values are not guaranteed selling prices. No percentage is calculated unless both the original price and the comparison price are present. Currency is shown with each figure.</p>
     <dl class="facts">
-      <div><dt>Original retail price</dt><dd>{original ? `${formatMoney(original.amount, original.currency)} · ${original.market ?? "Market not recorded"} · ${original.source} · ${original.verification}` : "Unavailable"}</dd></div>
-      <div><dt>Current estimated new or sealed value</dt><dd>{marketNew ? `${formatMoney(marketNew.amount, marketNew.currency)} · ${marketNew.date ?? "Date not recorded"} · ${marketNew.source} · ${marketNew.verification}` : "Unavailable"}</dd></div>
-      <div><dt>Current estimated used value</dt><dd>{marketUsed ? `${formatMoney(marketUsed.amount, marketUsed.currency)} · ${marketUsed.source}` : "Unavailable"}</dd></div>
-      <div><dt>Inflation-adjusted original price</dt><dd>Not calculated. There is no verified original price to adjust.</dd></div>
+      <div><dt>Original retail price</dt><dd>{moneyLine(original)}</dd></div>
+      <div><dt>Current estimated new or sealed value</dt><dd>{moneyLine(marketNew)}</dd></div>
+      <div><dt>Current estimated used value</dt><dd>{moneyLine(marketUsed)}</dd></div>
+      <div><dt>Inflation-adjusted original price</dt><dd>{inflation}</dd></div>
       <div><dt>Change in value</dt><dd>{formatPercent(change)}</dd></div>
       <div><dt>Original price per piece</dt><dd>{original ? formatMoney(pricePerPiece(original.amount, set.parts), original.currency) : "Unavailable"}</dd></div>
       <div><dt>Current estimated price per piece</dt><dd>{marketNew ? formatMoney(pricePerPiece(marketNew.amount, set.parts), marketNew.currency) : "Unavailable"}</dd></div>
@@ -94,6 +104,7 @@ const groups = [
             {group.sets.map((item) => <li><a href={href(`sets/${item.id}/`)}>{item.name}</a> · {item.id} · {item.year}</li>)}
           </ul>
         )}
+        {group.more > 0 && <p class="quiet">{group.more} more records share this printed number. Search that number to list them.</p>}
       </div>
     ))}
   </section>

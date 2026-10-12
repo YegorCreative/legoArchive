@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadCatalog } from "../src/lib/load-catalog.ts";
-import { printedNumber, rootTheme } from "../src/lib/catalog.ts";
+import { printedNumber, relatedSets, rootTheme } from "../src/lib/catalog.ts";
+import { renderCardFront } from "../src/lib/character-svg.ts";
+import { DEFAULT_APPEARANCE } from "../src/lib/character.ts";
 import { compareMissingLast, percentChange, pricePerPiece } from "../src/lib/pricing.ts";
 import { overallScore, rarityForOverall, rateCharacter } from "../src/lib/rarity.ts";
 import { parseOptionalNumber, searchSets, type SearchRecord } from "../src/lib/search.ts";
@@ -11,6 +13,8 @@ test("missing prices are not zero and do not produce a percentage", () => {
   assert.equal(percentChange(null, 40), null);
   assert.equal(percentChange(20, null), null);
   assert.equal(percentChange(0, 10), null);
+  assert.equal(percentChange(10, 15, { from: "USD", to: "EUR" }), null);
+  assert.equal(percentChange(10, 15, { from: "USD", to: "USD" }), 50);
   assert.equal(pricePerPiece(null, 100), null);
   assert.equal(pricePerPiece(10, null), null);
   assert.equal(compareMissingLast(null, 5, "asc"), 1);
@@ -87,4 +91,28 @@ test("snapshot keeps 1999 Star Wars and separates Town from City", () => {
   const year1999 = catalog.sets.filter((item) => item.year === 1999);
   assert.ok(year1999.length > 13);
   assert.equal(catalog.snapshot.setCount, catalog.sets.length);
+  assert.equal(catalog.prerenderIds.size, catalog.sets.length);
+  assert.equal(catalog.prerenderIds.has("75192-1"), true);
+  const related = relatedSets(catalog, set);
+  assert.equal(related.variants.some((item) => item.id === "7140-1"), false);
+  assert.ok(related.sameYear.length <= 8);
+});
+
+test("long card names wrap onto more than one line", () => {
+  const svg = renderCardFront(DEFAULT_APPEARANCE, {
+    idLabel: "LOCAL DRAFT",
+    name: "Captain Brickstorm of the Paper Sea",
+    creator: "Archive Studio",
+    year: 2027,
+    rarity: "Legendary",
+    overall: 90,
+    power: 90,
+    creativity: 96,
+    defense: 80,
+    bio: "A long biography stays wrapped.",
+    abilities: [],
+    banner: "NOT PUBLISHED",
+  });
+  assert.match(svg, />Captain Brickstorm of</);
+  assert.match(svg, />the Paper Sea</);
 });

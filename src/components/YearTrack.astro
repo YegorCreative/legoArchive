@@ -11,6 +11,7 @@ for (const year of Astro.props.years) {
   groups.set(decade, [...(groups.get(decade) ?? []), year]);
 }
 ---
+<p class="quiet timeline-hint">Scroll sideways to move through the decades. Each year opens that year’s archive.</p>
 <div class="timeline" tabindex="0" aria-label="Years by decade">
   {[...groups.entries()].map(([decade, years]) => (
     <section class="decade">

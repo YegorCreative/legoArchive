@@ -44,13 +44,17 @@ function wrap(value: string, width: number, limit: number): string[] {
   const words = value.trim().split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let line = "";
+  const chunksOf = (word: string) => (word.length > width ? word.match(new RegExp(`.{1,${width}}`, "g")) ?? [word] : [word]);
   for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (next.length > width && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = next;
+    for (const chunk of chunksOf(word)) {
+      const next = line ? `${line} ${chunk}` : chunk;
+      if (next.length > width && line) {
+        lines.push(line);
+        line = chunk;
+      } else {
+        line = next;
+      }
+      if (lines.length >= limit) return lines;
     }
   }
   if (line) lines.push(line);
@@ -187,6 +191,22 @@ function accessoryMarkup(accessory: Appearance["accessory"], cloth: string, acce
   return "";
 }
 
+function nameBlock(name: string, width: number, limit: number, multiStart: number, singleStart: number, singleSize: number): string {
+  const lines = wrap(name, width, limit);
+  const size = lines.length > 1 ? 30 : singleSize;
+  const start = lines.length > 1 ? multiStart : singleStart;
+  return lines
+    .map((line, index) => `<text x="375" y="${start + index * (size + 6)}" text-anchor="middle" fill="#f6f1e7" font-family="Georgia, serif" font-size="${size}">${esc(line)}</text>`)
+    .join("");
+}
+
+function nameBlockBottom(name: string, width: number, limit: number, multiStart: number, singleStart: number, singleSize: number): number {
+  const lines = wrap(name, width, limit);
+  const size = lines.length > 1 ? 30 : singleSize;
+  const start = lines.length > 1 ? multiStart : singleStart;
+  return start + (lines.length - 1) * (size + 6);
+}
+
 function statRow(label: string, value: number, y: number, color: string): string {
   const width = Math.max(0, Math.min(100, value)) * 2.4;
   return `<text x="78" y="${y}" fill="#f6f1e7" font-family="Georgia, serif" font-size="18">${esc(label)}</text>
@@ -212,9 +232,9 @@ export function renderCardFront(appearance: Appearance, copy: CardCopy, prefix =
     <text x="375" y="86" text-anchor="middle" fill="#e4c27a" font-family="Georgia, serif" font-size="28" letter-spacing="6">BRICK LEGENDS</text>
     <text x="375" y="122" text-anchor="middle" fill="#f6f1e7" font-family="Georgia, serif" font-size="18">${esc(copy.idLabel)}</text>
     ${figure}
-    <text x="375" y="660" text-anchor="middle" fill="#f6f1e7" font-family="Georgia, serif" font-size="40">${esc(copy.name)}</text>
-    <text x="375" y="700" text-anchor="middle" fill="#d9d0c3" font-family="Georgia, serif" font-size="20">${esc(copy.creator)} · ${copy.year}</text>
-    <text x="375" y="748" text-anchor="middle" fill="${frame}" font-family="Georgia, serif" font-size="28">${esc(copy.rarity)} · ${copy.overall}</text>
+    ${nameBlock(copy.name, 24, 2, 642, 660, 40)}
+    <text x="375" y="${nameBlockBottom(copy.name, 24, 2, 642, 660, 40) + 40}" text-anchor="middle" fill="#d9d0c3" font-family="Georgia, serif" font-size="20">${esc(wrap(copy.creator, 36, 1)[0] ?? "")} · ${copy.year}</text>
+    <text x="375" y="${nameBlockBottom(copy.name, 24, 2, 642, 660, 40) + 88}" text-anchor="middle" fill="${frame}" font-family="Georgia, serif" font-size="28">${esc(copy.rarity)} · ${copy.overall}</text>
     ${statRow("Power", copy.power, 810, frame)}
     ${statRow("Creativity", copy.creativity, 858, frame)}
     ${statRow("Defense", copy.defense, 906, frame)}
@@ -224,8 +244,10 @@ export function renderCardFront(appearance: Appearance, copy: CardCopy, prefix =
 
 export function renderCardBack(copy: CardCopy, prefix = "back"): string {
   const frame = RARITY_FRAME[copy.rarity];
+  const backName = wrap(copy.name, 26, 2);
+  const bioTop = 168 + backName.length * 42 + 36;
   const bio = wrap(copy.bio, 42, 5)
-    .map((line, index) => `<text x="80" y="${250 + index * 32}" fill="#f6f1e7" font-family="Georgia, serif" font-size="22">${esc(line)}</text>`)
+    .map((line, index) => `<text x="80" y="${bioTop + index * 32}" fill="#f6f1e7" font-family="Georgia, serif" font-size="22">${esc(line)}</text>`)
     .join("");
   const abilities = copy.abilities
     .slice(0, 3)
@@ -240,8 +262,8 @@ export function renderCardBack(copy: CardCopy, prefix = "back"): string {
     <rect width="750" height="1050" rx="36" fill="#141820"/>
     <rect x="18" y="18" width="714" height="1014" rx="28" fill="none" stroke="${frame}" stroke-width="10"/>
     <text x="375" y="100" text-anchor="middle" fill="#e4c27a" font-family="Georgia, serif" font-size="28" letter-spacing="4">BRICK LEGENDS</text>
-    <text x="80" y="180" fill="#f6f1e7" font-family="Georgia, serif" font-size="36">${esc(copy.name)}</text>
-    <text x="80" y="214" fill="#d9d0c3" font-family="Georgia, serif" font-size="20">Rule ${esc(copy.idLabel.includes("DRAFT") ? "bl-rarity-1" : "bl-rarity-1")} · fictional stats</text>
+    ${backName.map((line, index) => `<text x="80" y="${180 + index * 40}" fill="#f6f1e7" font-family="Georgia, serif" font-size="32">${esc(line)}</text>`).join("")}
+    <text x="80" y="${168 + backName.length * 42}" fill="#d9d0c3" font-family="Georgia, serif" font-size="20">Rule bl-rarity-1 · fictional stats</text>
     ${bio}
     ${abilities}
     <text x="80" y="860" fill="#d9d0c3" font-family="Georgia, serif" font-size="18">Overall ${copy.overall} · ${esc(copy.rarity)}</text>

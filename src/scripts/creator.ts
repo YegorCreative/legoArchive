@@ -71,8 +71,8 @@ function cardCopy(form: HTMLFormElement, rarity: Rarity, overall: number) {
   })).filter((ability) => ability.name || ability.text);
   return {
     idLabel: "LOCAL DRAFT",
-    name: String(data.get("name") || "Untitled").slice(0, 42),
-    creator: String(data.get("creator") || "Anonymous").slice(0, 42),
+    name: String(data.get("name") || "Untitled").slice(0, 64),
+    creator: String(data.get("creator") || "Anonymous").slice(0, 64),
     year: Number(data.get("cardYear") || new Date().getFullYear()),
     rarity,
     overall,
@@ -143,6 +143,11 @@ export function mountCreator(root: HTMLElement): void {
         assign("creator", draft.creator);
         assign("cardYear", String(draft.year));
         assign("bio", draft.bio);
+        for (let index = 1; index <= 3; index += 1) {
+          const ability = draft.abilities[index - 1];
+          assign(`abilityName${index}`, ability?.name ?? "");
+          assign(`abilityText${index}`, ability?.text ?? "");
+        }
         assign("power", String(draft.stats.power));
         assign("creativity", String(draft.stats.creativity));
         assign("defense", String(draft.stats.defense));
@@ -156,7 +161,7 @@ export function mountCreator(root: HTMLElement): void {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(loadDrafts().filter((item) => item.localId !== draft.localId)));
         listDrafts();
       });
-      row.append(load, document.createTextNode(` ${draft.rarity} · ${draft.overall} · saved only in this browser `), remove);
+      row.append(load, document.createTextNode(` ${draft.localId} · ${draft.rarity} · ${draft.overall} · saved only in this browser `), remove);
       drafts.append(row);
     }
   };
@@ -169,8 +174,8 @@ export function mountCreator(root: HTMLElement): void {
     const data = new FormData(form);
     const draft: Draft = {
       localId: `BL-DRAFT-${Date.now().toString(36)}`,
-      name: String(data.get("name") || "Untitled").slice(0, 42),
-      creator: String(data.get("creator") || "Anonymous").slice(0, 42),
+      name: String(data.get("name") || "Untitled").slice(0, 64),
+      creator: String(data.get("creator") || "Anonymous").slice(0, 64),
       year: Number(data.get("cardYear") || new Date().getFullYear()),
       bio: String(data.get("bio") || "").slice(0, 600),
       abilities: [1, 2, 3].map((index) => ({

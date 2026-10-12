@@ -18,7 +18,7 @@ npm test
 npm run dev
 ```
 
-The dev server uses the `/legoArchive/` base path. `npm run build` then `npm run preview` serves the static output the way GitHub Pages does, including the 404 fallback for set numbers that were not pre-rendered.
+The dev server uses the `/legoArchive/` base path. `npm run build` writes one HTML file for every cataloged set, then a sitemap. `npm run preview` serves that output the way GitHub Pages does. A set number that is not in the snapshot still falls through to the 404 explorer.
 
 ## Data
 
@@ -29,6 +29,16 @@ Prices are not invented. Unknown piece counts are not treated as zero.
 ## Brick Legends
 
 See [docs/brick-legends.md](docs/brick-legends.md). Drafts stay in the browser. Demonstration rankings are not real votes.
+
+## Security
+
+`npm audit` reports three dependency issues. The only offered fix is Astro 7.3.8, a major upgrade from the Astro 5 release this site is built with, so it was not applied in this phase.
+
+- `astro` at 5.x is inside the vulnerable range `<=7.2.7`. The advisories cover `define:vars` script sanitizing, server-island parameter replay, and spread-attribute escaping. This site is a static build: it does not use server islands or `define:vars`. The published pages do not ship Astro’s server runtime.
+- `esbuild` 0.27–0.28 is a development-server issue (arbitrary file read when the dev server runs on Windows). Production Pages hosting does not run that server. Development here is on macOS.
+- `sharp` `<=0.35.5-rc.1` inherits image-library vulnerabilities through Astro. This project does not run Sharp to transform set images; those images are hotlinked.
+
+Revisit the audit when an Astro 5 patch exists, or when a planned upgrade to Astro 7.3.8 or newer is tested against the full build.
 
 ## Deploy
 

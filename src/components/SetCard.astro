@@ -2,6 +2,8 @@
 import { imageUrl, printedNumber, subthemeName, type LoadedCatalog, type SetRecord, type ThemeRecord } from "../lib/catalog";
 import { formatCount } from "../lib/format";
 import { href } from "../lib/href";
+import { priceOf } from "../lib/price-index";
+import { formatMoney } from "../lib/pricing";
 
 interface Props {
   set: SetRecord;
@@ -11,6 +13,8 @@ interface Props {
 const { set, catalog, root } = Astro.props;
 const subtheme = subthemeName(set, catalog, root);
 const printed = printedNumber(set.id);
+const retailPrice = priceOf(set.id, "original-retail");
+const retail = retailPrice?.verification === "verified" ? retailPrice : null;
 ---
 <article class="card">
   <a class="card-link" href={href(`sets/${set.id}/`)}>
@@ -25,7 +29,7 @@ const printed = printedNumber(set.id);
         {printed !== set.id && <span>Printed {printed}</span>}
       </p>
       <p>{set.parts == null ? "Piece count unavailable" : `${formatCount(set.parts)} pieces`}</p>
-      <p class="quiet">Retail price unavailable</p>
+      <p class="quiet">{retail ? `Retail ${formatMoney(retail.amount, retail.currency)}` : "Retail price unavailable"}</p>
     </div>
   </a>
 </article>

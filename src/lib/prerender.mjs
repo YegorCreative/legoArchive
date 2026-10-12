@@ -1,4 +1,4 @@
-/** Which set pages are real HTML files. The rest use the client set viewer. */
+/** Decade helper and the set ids that receive a real HTML file. */
 
 export function decadeOf(year) {
   return Math.floor(year / 10) * 10;
@@ -24,13 +24,9 @@ export function largestByDecade(sets) {
     .map(([decade, set]) => ({ decade, set }));
 }
 
+/** Every cataloged set is a static page so its URL can return HTTP 200. */
 export function prerenderIdSet(sets) {
-  const ids = new Set();
-  for (const set of sets) {
-    if (set.year === 1999) ids.add(set.id);
-  }
-  for (const entry of largestByDecade(sets)) ids.add(entry.set.id);
-  return ids;
+  return new Set(sets.map((set) => set.id));
 }
 
 export function shouldPrerenderSet(set, ids) {
