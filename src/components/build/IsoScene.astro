@@ -1,0 +1,35 @@
+---
+import { project, type Brick } from "../../lib/iso-brick";
+
+interface Props {
+  bricks: Brick[];
+  id?: string;
+  label?: string;
+  headroom?: number;
+  class?: string;
+}
+const { bricks, id, label, headroom = 0 } = Astro.props;
+const extra = Astro.props.class ?? "";
+const layout = project(bricks, headroom);
+const { shadow } = layout;
+---
+<div class:list={["iso-wrap", extra]} id={id} style={`--ax:${layout.anchorX.toFixed(2)}%;--ay:${layout.anchorY.toFixed(2)}%`}>
+  <svg class="iso-scene" viewBox={layout.viewBox} role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : "true"}>
+    <ellipse cx={shadow.cx} cy={shadow.cy} rx={shadow.rx} ry={shadow.ry} fill="rgba(12,16,28,0.35)"></ellipse>
+    {layout.nodes.map((node) => (
+      <g class:list={["iso-brick", node.kind === "flame" && "iso-flame"]} style={`--delay:${node.delay};--pop:${node.pop.toFixed(2)}`}>
+        {node.left ? <polygon points={node.left} fill={node.leftFill}></polygon> : null}
+        {node.right ? <polygon points={node.right} fill={node.rightFill}></polygon> : null}
+        {node.top ? <polygon points={node.top} fill={node.topFill}></polygon> : null}
+        {node.edge && node.kind !== "flame" ? <polyline points={node.edge} fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.1" stroke-linejoin="round"></polyline> : null}
+        {node.studs.map((stud) => (
+          <>
+            <ellipse cx={stud.cx} cy={stud.cy + stud.ry * 0.62} rx={stud.rx} ry={stud.ry * 0.72} fill={stud.wall}></ellipse>
+            <ellipse cx={stud.cx} cy={stud.cy} rx={stud.rx} ry={stud.ry} fill={stud.top}></ellipse>
+            <ellipse cx={stud.cx - stud.rx * 0.28} cy={stud.cy - stud.ry * 0.32} rx={stud.rx * 0.28} ry={stud.ry * 0.22} fill="rgba(255,255,255,0.9)"></ellipse>
+          </>
+        ))}
+      </g>
+    ))}
+  </svg>
+</div>

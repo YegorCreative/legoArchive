@@ -1,0 +1,20 @@
+---
+import { displayPlinth, PLINTH_HEADROOM } from "../../lib/build-models";
+import { href } from "../../lib/href";
+import { project } from "../../lib/iso-brick";
+
+interface Props {
+  label: string;
+}
+const { label } = Astro.props;
+const frame = project(displayPlinth(), PLINTH_HEADROOM);
+---
+<div class="display-stand">
+  <div class="stand-stage" style={`--ax:${frame.anchorX.toFixed(2)}%;--ay:${frame.anchorY.toFixed(2)}%`}>
+    <img class="plinth-art" src={href("build/plinth.svg")} alt="" width={frame.width} height={frame.height} decoding="async" />
+    <div class="stand-subject">
+      <slot />
+    </div>
+  </div>
+  <p class="stand-name">{label}</p>
+</div>

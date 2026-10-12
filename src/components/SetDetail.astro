@@ -8,6 +8,7 @@ import {
   type SetRecord,
 } from "../lib/catalog";
 import { formatCount } from "../lib/format";
+import DisplayStand from "./build/DisplayStand.astro";
 import { href } from "../lib/href";
 import { adjustPurchasingPower, latestCompleteCpiYear } from "../lib/inflation";
 import { verifiedPrice } from "../lib/price-index";
@@ -50,12 +51,14 @@ const groups = [
 ---
 <article class="set-page">
   <header class="set-hero">
-    <figure class="shot">
-      <button type="button" class="shot-zoom" data-zoom={imageUrl(catalog.snapshot, set.id)} data-zoom-alt={`${set.name}, set ${set.id}. Catalog photograph, not a 3D model.`}>
-        <img class="set-img" src={imageUrl(catalog.snapshot, set.id)} alt={`${set.name}, set ${set.id}`} width="800" height="800" decoding="async" fetchpriority="high" />
-        <span class="shot-hint">View photograph</span>
-      </button>
-    </figure>
+    <DisplayStand label={`${set.name} · ${set.id}`}>
+      <figure class="shot">
+        <button type="button" class="shot-zoom" data-zoom={imageUrl(catalog.snapshot, set.id)} data-zoom-alt={`${set.name}, set ${set.id}. Catalog photograph, not a 3D model.`}>
+          <img class="set-img" src={imageUrl(catalog.snapshot, set.id)} alt={`${set.name}, set ${set.id}`} width="800" height="800" decoding="async" fetchpriority="high" />
+          <span class="shot-hint">View photograph</span>
+        </button>
+      </figure>
+    </DisplayStand>
     <div>
       <p class="eyebrow">{root?.name ?? "Theme unavailable"}{theme && theme.id !== root?.id ? ` · ${theme.name}` : ""}</p>
       <h1>{set.name}</h1>

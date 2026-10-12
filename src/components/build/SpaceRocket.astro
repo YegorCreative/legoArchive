@@ -1,0 +1,7 @@
+---
+import IsoScene from "./IsoScene.astro";
+import { spaceLaunch } from "../../lib/build-models";
+---
+<div class="model-slot rocket-slot">
+  <IsoScene id="rocket-model" bricks={spaceLaunch()} label="Original launch pad with a gantry, a rocket, and a small rover" />
+</div>

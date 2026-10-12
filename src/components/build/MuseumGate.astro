@@ -1,0 +1,12 @@
+---
+import IsoScene from "./IsoScene.astro";
+import { museumGate } from "../../lib/build-models";
+
+---
+<div class="model-slot gate-slot">
+  <IsoScene id="gate-model" bricks={museumGate()} label="Museum entrance built from a baseplate, two towers, a lintel, and a roof brick" />
+  <button type="button" class="loose-fact" data-loose aria-expanded="false" aria-controls="snapshot-fact">
+    <IsoScene class="iso-still" bricks={[{ x: 0, y: 0, z: 0, w: 2, d: 1, h: 0.72, color: "#e3000b" }]} />
+    <span class="sr">Loose brick. Show a fact from this snapshot.</span>
+  </button>
+</div>

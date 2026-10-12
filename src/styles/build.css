@@ -1,0 +1,203 @@
+/* Isometric construction. Stud pitch, brick height, and the light direction live in iso-brick.ts. */
+
+.iso-wrap { position: relative; width: 100%; }
+.iso-scene { display: block; width: 100%; height: auto; overflow: visible; }
+.iso-brick {
+  animation: assemble 0.72s cubic-bezier(0.16, 0.84, 0.24, 1.04) both;
+  animation-delay: calc(var(--delay) * 1ms);
+}
+.iso-flame {
+  transform-origin: center top;
+  transform-box: fill-box;
+  animation:
+    assemble 0.72s cubic-bezier(0.16, 0.84, 0.24, 1.04) both,
+    flame 0.45s steps(2, end) 1.3s infinite;
+  animation-delay: calc(var(--delay) * 1ms), 1.3s;
+}
+@keyframes assemble {
+  from { opacity: 0; transform: translateY(calc(var(--pop, 1) * -42px)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes flame {
+  50% { opacity: 0.55; }
+}
+
+.model-slot { position: relative; width: min(100%, 36rem); margin-inline: auto; }
+.gate-slot {
+  width: min(100%, 40rem);
+  transform: translate3d(calc(var(--px, 0) * 16px), calc(var(--py, 0) * 10px), 0);
+}
+.rocket-slot {
+  width: min(100%, 32rem);
+  justify-self: center;
+  transform: translate3d(calc(var(--px, 0) * -14px), calc(var(--py, 0) * 8px), 0);
+}
+
+.iso-still .iso-brick { animation: none; }
+.loose-fact {
+  position: absolute;
+  left: 4%;
+  bottom: 7%;
+  z-index: 4;
+  width: 4.6rem;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.loose-fact:focus-visible { outline: 3px solid #1a1400; outline-offset: 3px; }
+.fact-pop {
+  position: relative;
+  z-index: 5;
+  max-width: 28rem;
+  margin: 0.8rem 0 0;
+  padding: 0.7rem 0.8rem 0.85rem;
+  background: #fff;
+  color: #1a1400;
+  border-radius: 0.4rem;
+  font-weight: 650;
+  box-shadow: inset 0 -0.35rem 0 #e3000b, 0 0.35rem 0 rgba(26, 20, 0, 0.16);
+}
+
+.yard h1, .yard .tagline {
+  animation: title-in 0.7s ease 1.05s both;
+}
+@keyframes title-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.space-room {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  padding: 2.4rem 5vw 2.8rem;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 213, 0, 0.16), transparent 16rem),
+    radial-gradient(circle at 12% 80%, rgba(0, 87, 184, 0.45), transparent 18rem),
+    #071833;
+  color: #f4f7ff;
+}
+.starfield {
+  position: absolute;
+  inset: -20% 0 auto;
+  height: 150%;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, #fff 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(255, 213, 0, 0.8) 0 1.2px, transparent 1.8px);
+  background-size: 54px 54px, 90px 90px;
+  background-position: 0 0, 20px 30px;
+  opacity: 0.7;
+  transform: translate3d(calc(var(--px, 0) * -16px), calc(var(--scroll, 0) * -70px), 0);
+}
+.space-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .space-layout { grid-template-columns: minmax(16rem, 0.9fr) minmax(16rem, 0.85fr); }
+}
+.space-room h2 { margin: 0; color: #ffd500; font-size: clamp(2.2rem, 5vw, 4rem); }
+.space-room .space-copy p { max-width: 38rem; color: #d7e6ff; }
+.space-room .brick-btn { justify-self: start; margin: 0.35rem 0.55rem 0 0; }
+.stand-row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 900px) {
+  .stand-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.stand-link { text-decoration: none; color: #1a1400; display: block; min-width: 0; }
+.stand-link:focus-visible { outline: 3px solid #ffd500; outline-offset: 4px; }
+
+.display-stand { position: relative; min-width: 0; }
+.stand-stage { position: relative; }
+.plinth-art { display: block; width: 100%; height: auto; }
+.stand-subject {
+  position: absolute;
+  left: var(--ax);
+  top: var(--ay);
+  z-index: 2;
+  width: min(42%, 9.5rem);
+  transform: translate(-50%, -82%);
+  display: grid;
+  justify-items: center;
+}
+.stand-subject img {
+  width: auto;
+  max-width: 100%;
+  max-height: 6.4rem;
+  object-fit: contain;
+  filter: drop-shadow(0 0.65rem 0 rgba(20, 16, 8, 0.28)) drop-shadow(0 0.9rem 0.45rem rgba(20, 16, 8, 0.2));
+}
+.set-hero .display-stand .shot,
+.set-hero .display-stand .shot-zoom {
+  aspect-ratio: auto;
+  min-height: 0;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+.set-hero .display-stand .shot img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 8.5rem;
+}
+.display-stand .shot-hint {
+  top: 0.35rem;
+  bottom: auto;
+  background: #1a1400;
+  color: #fff;
+}
+.stand-name {
+  position: relative;
+  z-index: 3;
+  margin: 0.35rem 0.4rem 0;
+  padding: 0.45rem 0.7rem 0.6rem;
+  background: #fff;
+  color: #1a1400;
+  border-radius: 0.35rem;
+  font-weight: 700;
+  box-shadow: inset 0 -0.35rem 0 #e3000b, 0 0.25rem 0 rgba(0, 0, 0, 0.12);
+}
+.stand-note { display: block; margin: 0.45rem 0.4rem 0.2rem; color: #d7e6ff; }
+
+@media (max-width: 700px) {
+  .gate-slot, .rocket-slot { width: min(100%, 24rem); }
+  .fact-pop { max-width: min(16rem, 70vw); }
+  .space-room { padding-inline: 1rem; }
+  .stand-subject { width: min(64%, 13rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iso-brick, .iso-flame, .yard h1, .yard .tagline { animation: none; }
+  .gate-slot, .rocket-slot, .starfield { transform: none; }
+}
+
+@media print {
+  html, body { color-scheme: light; background: #fff !important; color: #1a1400 !important; }
+  .site-header, .site-nav a, .nav-pop > summary {
+    background: #fff !important;
+    color: #1a1400 !important;
+  }
+  .yard, .space-room, .year-stage, .legends-door, .world, .decade-plate, .display-stand {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

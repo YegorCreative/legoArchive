@@ -9,6 +9,24 @@
 
   let dialog = null;
   document.addEventListener("click", (event) => {
+    const loose = event.target instanceof Element ? event.target.closest("[data-loose]") : null;
+    if (loose instanceof HTMLButtonElement) {
+      const fact = document.getElementById(loose.getAttribute("aria-controls") || "");
+      const open = loose.getAttribute("aria-expanded") === "true";
+      loose.setAttribute("aria-expanded", open ? "false" : "true");
+      if (fact) fact.hidden = open;
+      return;
+    }
+    const rebuild = event.target instanceof Element ? event.target.closest("[data-rebuild]") : null;
+    if (rebuild instanceof HTMLElement) {
+      const scene = document.getElementById(rebuild.dataset.rebuild || "");
+      scene?.querySelectorAll(".iso-brick").forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        node.style.animation = "none";
+        void node.offsetWidth;
+        node.style.animation = "";
+      });
+    }
     const opener = event.target instanceof Element ? event.target.closest("[data-zoom]") : null;
     if (!(opener instanceof HTMLElement)) return;
     const src = opener.dataset.zoom;

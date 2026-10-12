@@ -1,5 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
+import DisplayStand from "../components/build/DisplayStand.astro";
+import MuseumGate from "../components/build/MuseumGate.astro";
+import SpaceRocket from "../components/build/SpaceRocket.astro";
 import { decadeHighlights, decadeOf, groupByRootTheme, imageUrl, largestSet, pieceStats, rootTheme, setsInYear } from "../lib/catalog";
 import { galleryTitle } from "../lib/exhibits";
 import { formatCount } from "../lib/format";
@@ -46,31 +49,18 @@ const worlds = [
   const theme = catalog.themeBySlug.get(item.slug);
   return theme ? [{ ...item, theme, count: counts.get(theme.id) ?? 0 }] : [];
 });
-const wall = [
-  { x: "6%", y: "34%", c: "#e3000b", bx: "-120px", by: "-40px", spin: "-18deg", z: "10px" },
-  { x: "36%", y: "34%", c: "#ffd500", bx: "0px", by: "-130px", spin: "8deg", z: "40px" },
-  { x: "66%", y: "34%", c: "#0057b8", bx: "130px", by: "-30px", spin: "16deg", z: "8px" },
-  { x: "20%", y: "52%", c: "#00852d", bx: "-80px", by: "20px", spin: "-8deg", z: "50px" },
-  { x: "50%", y: "52%", c: "#f47b20", bx: "70px", by: "30px", spin: "12deg", z: "24px" },
-  { x: "10%", y: "70%", c: "#6b2d8b", bx: "-140px", by: "90px", spin: "-14deg", z: "0px" },
-  { x: "42%", y: "70%", c: "#ffffff", bx: "20px", by: "120px", spin: "6deg", z: "18px" },
-  { x: "34%", y: "12%", c: "#e3000b", bx: "30px", by: "-160px", spin: "20deg", z: "80px" },
-];
-const loose = [
-  { c: "#e3000b", dx: "-36px", dy: "-16px", t: "10%", l: "58%" },
-  { c: "#0057b8", dx: "42px", dy: "14px", t: "16%", l: "86%" },
-  { c: "#00852d", dx: "-20px", dy: "24px", t: "74%", l: "62%" },
-  { c: "#f47b20", dx: "30px", dy: "-18px", t: "78%", l: "88%" },
-];
+const spaceShows = [
+  { id: "497-1", note: "1979. Among the earliest Space sets in this snapshot." },
+  { id: "70709-1", note: "2013. Largest recorded Space build in this snapshot, by piece count." },
+  { id: "7066-1", note: "2011. Earth Defense HQ, the second-largest recorded Space build here." },
+].flatMap((item) => {
+  const set = catalog.setById.get(item.id);
+  return set ? [{ ...item, set }] : [];
+});
 ---
 <Base title="LEGO Archive" description="An unofficial museum of LEGO sets, organized by year, theme, and story.">
   <div class="play-floor">
     <section class="yard" data-parallax data-scene>
-      {loose.map((brick) => (
-        <span class="loose-brick" style={`--c:${brick.c}; --dx:${brick.dx}; --dy:${brick.dy}; top:${brick.t}; left:${brick.l}`} aria-hidden="true">
-          <i></i><i></i>
-        </span>
-      ))}
       <div class="yard-copy">
         <p class="eyebrow yard-kicker">Unofficial digital museum</p>
         <h1>LEGO<br />ARCHIVE</h1>
@@ -79,19 +69,12 @@ const loose = [
         <div class="yard-actions">
           <a class="brick-btn" href="#year-1999">Drop into 1999</a>
           <a class="brick-btn blue" href={href("timeline/")}>Travel the decades</a>
+          <button type="button" class="brick-btn ink" data-rebuild="gate-model">Rebuild the gate</button>
         </div>
+        <p id="snapshot-fact" class="fact-pop" hidden>Earliest year recorded in this snapshot: {first}. Latest recorded year: {last}. The entrance beside the loose brick is original geometry, not a set from the catalog.</p>
       </div>
-      <div class="build-stage" aria-hidden="true">
-        <div class="baseplate"></div>
-        <div class="sculpture-yaw">
-          <div class="sculpture">
-            {wall.map((brick) => (
-              <span class="stud-brick" style={`--c:${brick.c}; --x:${brick.x}; --y:${brick.y}; --bx:${brick.bx}; --by:${brick.by}; --spin:${brick.spin}; --z:${brick.z}`}>
-                <span class="stud-row"><i></i><i></i><i></i><i></i></span>
-              </span>
-            ))}
-          </div>
-        </div>
+      <div class="build-stage">
+        <MuseumGate />
       </div>
     </section>
 
@@ -100,6 +83,30 @@ const loose = [
         <span class="stud-brick mini" style={`--c:${color}; --bx:${(index - 3.5) * 36}px`}><span class="stud-row"><i></i><i></i></span></span>
       ))}
     </div>
+
+    <section class="space-room" id="space-room" data-parallax data-scene>
+      <div class="starfield" aria-hidden="true"></div>
+      <div class="space-layout">
+        <div class="space-copy">
+          <p class="eyebrow on-dark">Space exhibition</p>
+          <h2>A launch pad, built on the plate</h2>
+          <p>The pad, gantry, rocket, and rover are original geometry. The three sets below are real Space records from the snapshot: an early Classic Space set, and the two largest Space builds by piece count. This is not a ranking of the most famous sets.</p>
+          <a class="brick-btn" href={href("themes/space/")}>Enter the Space theme</a>
+          <button type="button" class="brick-btn ink" data-rebuild="rocket-model">Rebuild the rocket</button>
+        </div>
+        <SpaceRocket />
+      </div>
+      <div class="stand-row">
+        {spaceShows.map((item) => (
+          <a class="stand-link" href={href(`sets/${item.set.id}/`)}>
+            <DisplayStand label={item.set.name}>
+              <img src={imageUrl(catalog.snapshot, item.set.id)} alt="" width="480" height="360" loading="lazy" decoding="async" />
+            </DisplayStand>
+            <span class="stand-note">{item.note} {item.set.parts == null ? "Piece count unavailable." : `${formatCount(item.set.parts)} pieces.`}</span>
+          </a>
+        ))}
+      </div>
+    </section>
 
     <section class="year-stage" id="year-1999" data-parallax data-scene>
       <p class="eyebrow on-dark">A year you can walk into</p>
@@ -159,7 +166,7 @@ const loose = [
       </div>
       <div class="worlds">
         {worlds.map((world) => (
-          <a class={`world ${world.size}`} style={`--plate:${world.plate}; --ink:${world.ink}`} href={href(`themes/${world.theme.slug}/`)}>
+          <a class={`world ${world.size}`} style={`--plate:${world.plate}; --on:${world.ink}`} href={href(`themes/${world.theme.slug}/`)}>
             <span class="world-studs" aria-hidden="true"></span>
             <b>{world.theme.name}</b>
             <span>{formatCount(world.count)} documented sets</span>
