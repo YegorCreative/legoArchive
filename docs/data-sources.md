@@ -50,7 +50,7 @@ Missing amounts stay null. They are never stored or charted as zero. A percentag
 
 Rebrickable’s CSV downloads, which this archive already uses, do not include set retail or market prices. The Rebrickable API is allowed for catalog use with attribution and still is not a retail-price dump. Part price estimates on Rebrickable are 24-hour store averages for new parts, not set MSRP, and they are not imported.
 
-Until a permitted feed or a hand-checked official price is added, every price field on the site says unavailable.
+Until a permitted feed or a hand-checked official price is added, every set price field on the site says unavailable. US purchasing power uses BLS CPI-U series `CUUR0000SA0` in `src/data/cpi-u.json`. See [docs/pricing.md](pricing.md). Incomplete years are omitted rather than estimated.
 
 ## Identity rules
 

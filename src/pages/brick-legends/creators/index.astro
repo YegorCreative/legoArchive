@@ -1,0 +1,20 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { DEMO_CHARACTERS } from "../../../data/legends-demo";
+import { href } from "../../../lib/href";
+
+const studioCount = DEMO_CHARACTERS.filter((character) => character.creator === "Archive Studio").length;
+---
+<Base title="Creator profiles" description="Demonstration creator profiles. These are not registered accounts." section="legends">
+  <p class="eyebrow">Demonstration</p>
+  <h1 class="lede">Creator profiles</h1>
+  <p class="notice">No one can sign in yet. The profile below is a labeled sample tied to the fictional Archive Studio cards. Community rank, follower counts, and awards are not recorded.</p>
+  <div class="card-grid">
+    <a class="theme-tile" href={href("brick-legends/creators/archive-studio/")}>
+      <p class="eyebrow">Sample profile</p>
+      <h3>Archive Studio</h3>
+      <p>{studioCount} demonstration characters</p>
+      <p class="quiet">Community ranking: not recorded</p>
+    </a>
+  </div>
+</Base>

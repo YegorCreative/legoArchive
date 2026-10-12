@@ -5,6 +5,7 @@ import { printedNumber, relatedSets, rootTheme } from "../src/lib/catalog.ts";
 import { renderCardFront } from "../src/lib/character-svg.ts";
 import { DEFAULT_APPEARANCE } from "../src/lib/character.ts";
 import { compareMissingLast, percentChange, pricePerPiece } from "../src/lib/pricing.ts";
+import { adjustPurchasingPower, cpiValue, latestCompleteCpiYear } from "../src/lib/inflation.ts";
 import { overallScore, rarityForOverall, rateCharacter } from "../src/lib/rarity.ts";
 import { parseOptionalNumber, searchSets, type SearchRecord } from "../src/lib/search.ts";
 import { DEMO_CHARACTERS } from "../src/data/legends-demo.ts";
@@ -96,6 +97,17 @@ test("snapshot keeps 1999 Star Wars and separates Town from City", () => {
   const related = relatedSets(catalog, set);
   assert.equal(related.variants.some((item) => item.id === "7140-1"), false);
   assert.ok(related.sameYear.length <= 8);
+});
+
+test("CPI adjustment uses stored annual indexes and skips gaps", () => {
+  assert.equal(cpiValue(1999), 166.575);
+  assert.equal(cpiValue(2025), null);
+  assert.equal(cpiValue(2026), null);
+  assert.equal(latestCompleteCpiYear(), 2024);
+  const adjusted = adjustPurchasingPower(100, 1999, 2024);
+  assert.ok(adjusted != null && adjusted > 100);
+  assert.equal(adjustPurchasingPower(100, 1999, 2025), null);
+  assert.equal(adjustPurchasingPower(null, 1999, 2024), null);
 });
 
 test("long card names wrap onto more than one line", () => {

@@ -37,6 +37,8 @@ export default defineConfig({
   site: "https://yegorcreative.github.io",
   base: "/legoArchive",
   trailingSlash: "always",
+  // Keep HTML-aware whitespace so inline text does not collapse the way JSX compression would.
+  compressHTML: true,
   build: { format: "directory" },
   vite: { plugins: [setViewerFallback()] },
 });

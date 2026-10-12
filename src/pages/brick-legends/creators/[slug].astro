@@ -1,0 +1,36 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { DEMO_CHARACTERS } from "../../../data/legends-demo";
+import { href } from "../../../lib/href";
+
+export function getStaticPaths() {
+  return [{ params: { slug: "archive-studio" } }];
+}
+
+const characters = DEMO_CHARACTERS.filter((character) => character.creator === "Archive Studio");
+const slug = Astro.params.slug;
+if (slug !== "archive-studio") throw new Error("Unknown demonstration profile");
+---
+<Base title="Archive Studio" description="A demonstration Brick Legends profile. Not a registered account." section="legends">
+  <p class="eyebrow">Demonstration profile</p>
+  <h1 class="lede">Archive Studio</h1>
+  <p class="notice">This is not a registered account. The characters are the same fictional samples used on the rankings and Annual Five pages. Publishing them here does not grant LEGO Archive a commercial license.</p>
+  <dl class="facts">
+    <div><dt>Username</dt><dd>Archive Studio</dd></div>
+    <div><dt>Join date</dt><dd>Not recorded</dd></div>
+    <div><dt>Biography</dt><dd>A sample studio used to show the profile layout.</dd></div>
+    <div><dt>Demonstration characters</dt><dd>{characters.length}</dd></div>
+    <div><dt>Published cards</dt><dd>None. Nothing on this site is publicly submitted.</dd></div>
+    <div><dt>Community ranking</dt><dd>Not recorded</dd></div>
+    <div><dt>Annual Five awards</dt><dd>None. No year has a real selection.</dd></div>
+  </dl>
+  <section>
+    <h2>Sample characters</h2>
+    <ul>
+      {characters.map((character) => (
+        <li>{character.name} · fictional overall {character.overall} · {character.rarity} · {character.ruleVersion}</li>
+      ))}
+    </ul>
+    <p class="quiet">Fictional power, creativity, and defense are card statistics. They are not votes. <a href={href("brick-legends/rankings/")}>Rankings</a> remain a demonstration layout.</p>
+  </section>
+</Base>

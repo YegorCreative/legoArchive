@@ -17,7 +17,7 @@
   "dependencies": {
     "@fontsource/fraunces": "^5.2.9",
     "@fontsource/outfit": "^5.2.8",
-    "astro": "^5.14.1"
+    "astro": "^7.3.8"
   },
   "engines": {
     "node": ">=22"

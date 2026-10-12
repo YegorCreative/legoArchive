@@ -32,13 +32,7 @@ See [docs/brick-legends.md](docs/brick-legends.md). Drafts stay in the browser. 
 
 ## Security
 
-`npm audit` reports three dependency issues. The only offered fix is Astro 7.3.8, a major upgrade from the Astro 5 release this site is built with, so it was not applied in this phase.
-
-- `astro` at 5.x is inside the vulnerable range `<=7.2.7`. The advisories cover `define:vars` script sanitizing, server-island parameter replay, and spread-attribute escaping. This site is a static build: it does not use server islands or `define:vars`. The published pages do not ship Astro’s server runtime.
-- `esbuild` 0.27–0.28 is a development-server issue (arbitrary file read when the dev server runs on Windows). Production Pages hosting does not run that server. Development here is on macOS.
-- `sharp` `<=0.35.5-rc.1` inherits image-library vulnerabilities through Astro. This project does not run Sharp to transform set images; those images are hotlinked.
-
-Revisit the audit when an Astro 5 patch exists, or when a planned upgrade to Astro 7.3.8 or newer is tested against the full build.
+The site is built with Astro 7.3.8. `npm audit` reports no known vulnerabilities in the installed tree after that upgrade. HTML whitespace stays on the previous HTML-aware setting (`compressHTML: true`) so inline text does not collapse. There is no `src/fetch.ts`, no legacy content collection, and no Astro DB.
 
 ## Deploy
 

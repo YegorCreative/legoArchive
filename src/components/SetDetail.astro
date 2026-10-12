@@ -9,7 +9,8 @@ import {
 } from "../lib/catalog";
 import { formatCount } from "../lib/format";
 import { href } from "../lib/href";
-import { priceOf } from "../lib/price-index";
+import { adjustPurchasingPower, latestCompleteCpiYear } from "../lib/inflation";
+import { priceOf, pricesFor } from "../lib/price-index";
 import { formatMoney, formatPercent, percentChange, pricePerPiece, type PriceObservation } from "../lib/pricing";
 
 interface Props {
@@ -20,7 +21,7 @@ const { catalog, set } = Astro.props;
 const theme = catalog.themeById.get(set.themeId) ?? null;
 const root = rootTheme(set.themeId, catalog.themeById);
 const related = relatedSets(catalog, set);
-const original = priceOf(set.id, "original-retail");
+const original = pricesFor(set.id).find((price) => price.kind === "original-retail" && price.verification === "verified") ?? null;
 const marketNew = priceOf(set.id, "market-new");
 const marketUsed = priceOf(set.id, "market-used");
 const observations = [original, marketNew, marketUsed].filter((price): price is PriceObservation => price != null);
@@ -29,9 +30,19 @@ const change = percentChange(original?.amount ?? null, marketNew?.amount ?? null
   to: marketNew?.currency ?? null,
 });
 const datedPoints = observations.filter((price) => price.date).length;
-const inflation = original
-  ? "Not calculated. No published price index is stored for this currency and date."
-  : "Not calculated. There is no verified original price to adjust.";
+const originalYear = original?.date ? Number(original.date.slice(0, 4)) : null;
+const comparisonYear = latestCompleteCpiYear();
+const adjusted =
+  original?.currency === "USD"
+    ? adjustPurchasingPower(original.amount, Number.isInteger(originalYear) ? originalYear : null, comparisonYear)
+    : null;
+const inflation = !original
+  ? "Not calculated. There is no verified original price to adjust."
+  : original.currency !== "USD"
+    ? "Not calculated. Purchasing-power adjustment is implemented for US dollars only."
+    : adjusted == null || comparisonYear == null
+      ? "Not calculated. The original year or the comparison year is missing from the stored CPI-U series."
+      : `${formatMoney(adjusted, "USD")} in ${comparisonYear} dollars. This measures purchasing power, not what a collector might pay.`;
 const moneyLine = (price: PriceObservation | null) =>
   price
     ? `${formatMoney(price.amount, price.currency)} · ${price.market ?? "Market not recorded"} · ${price.date ?? "Date not recorded"} · ${price.source} · ${price.verification}`

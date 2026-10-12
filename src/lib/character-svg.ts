@@ -75,6 +75,9 @@ function background(id: string, prefix: string): string {
   if (id === "field") {
     return `<linearGradient id="${key}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1224"/><stop offset="1" stop-color="#1c2748"/></linearGradient>`;
   }
+  if (id === "harbor") {
+    return `<linearGradient id="${key}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8eb4c8"/><stop offset="0.55" stop-color="#24556e"/><stop offset="1" stop-color="#123246"/></linearGradient>`;
+  }
   return `<linearGradient id="${key}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f1e6"/><stop offset="1" stop-color="#e4d3bc"/></linearGradient>`;
 }
 
@@ -105,6 +108,7 @@ export function renderCharacter(appearance: Appearance, prefix = "fig"): string 
     <defs>${background(appearance.background, prefix)}</defs>
     <rect width="300" height="420" rx="28" fill="url(#${bg})"/>
     ${appearance.background === "field" ? `<g fill="#f4efe6" opacity="0.8"><circle cx="40" cy="50" r="1.4"/><circle cx="250" cy="80" r="1.2"/><circle cx="70" cy="120" r="1"/><circle cx="220" cy="36" r="1.5"/><circle cx="180" cy="100" r="1"/></g>` : ""}
+    ${appearance.background === "harbor" ? `<path d="M0 250 Q75 230 150 250 T300 250 V300 H0 Z" fill="#d7efe4" opacity="0.35"/><path d="M0 280 Q80 260 160 282 T300 270 V320 H0 Z" fill="#7eb0c4" opacity="0.45"/>` : ""}
     ${appearance.accessory === "cape" ? `<path d="M92 168 C40 210 34 300 58 360 L96 360 C78 290 86 220 112 176 Z" fill="${cloth}" opacity="0.92"/><path d="M208 168 C260 210 266 300 242 360 L204 360 C222 290 214 220 188 176 Z" fill="${accent}" opacity="0.35"/>` : ""}
     <ellipse cx="150" cy="392" rx="70" ry="10" fill="#1c1915" opacity="0.18"/>
     ${legMarkup}
@@ -170,6 +174,7 @@ function torsoMarkup(torso: Appearance["torso"], cloth: string, accent: string, 
   if (torso === "jacket") return `${body}<path d="M150 176 V${hem - 8}" stroke="${accent}" stroke-width="3"/><path d="M122 176 L150 198 L178 176" fill="none" stroke="${skin}" stroke-width="3"/>`;
   if (torso === "armor") return `${body}<rect x="122" y="188" width="56" height="40" rx="8" fill="${accent}" opacity="0.9"/>`;
   if (torso === "coat") return `${body}<path d="M150 180 V${hem - 12}" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>`;
+  if (torso === "vest") return `${body}<path d="M122 176 H178 L172 236 H128 Z" fill="${accent}" opacity="0.9"/>`;
   return `${body}<path d="M128 176 L150 202 L172 176" fill="${accent}"/>`;
 }
 
@@ -188,6 +193,7 @@ function accessoryMarkup(accessory: Appearance["accessory"], cloth: string, acce
   if (accessory === "shield") return `<path d="M214 230 H268 V280 Q241 312 214 280 Z" fill="${accent}" stroke="${cloth}" stroke-width="4"/>`;
   if (accessory === "staff") return `<rect x="250" y="120" width="8" height="230" rx="4" fill="${accent}"/><circle cx="254" cy="116" r="10" fill="${cloth}"/>`;
   if (accessory === "satchel") return `<rect x="188" y="214" width="36" height="28" rx="6" fill="${accent}"/><path d="M196 214 Q206 196 216 214" fill="none" stroke="${cloth}" stroke-width="3"/>`;
+  if (accessory === "lantern") return `<rect x="232" y="210" width="22" height="30" rx="4" fill="${accent}"/><rect x="236" y="216" width="14" height="16" fill="#f4efe6"/><rect x="240" y="198" width="6" height="14" fill="${cloth}"/>`;
   return "";
 }
 

@@ -5,15 +5,15 @@ export interface Appearance {
   hair: "none" | "crop" | "sweep" | "long" | "spikes";
   hat: "none" | "cap" | "crown" | "brim";
   helmet: "none" | "dome" | "knight" | "pilot";
-  torso: "tunic" | "jacket" | "armor" | "coat";
+  torso: "tunic" | "jacket" | "armor" | "coat" | "vest";
   torsoColor: string;
   arms: "plain" | "sleeves" | "guards";
   armColor: string;
   legs: "straight" | "boots" | "wrapped";
   legColor: string;
-  accessory: "none" | "cape" | "shield" | "staff" | "satchel";
+  accessory: "none" | "cape" | "shield" | "staff" | "satchel" | "lantern";
   accent: string;
-  background: "paper" | "night" | "desert" | "aurora" | "field";
+  background: "paper" | "night" | "desert" | "aurora" | "field" | "harbor";
 }
 
 export interface Swatch {
@@ -90,6 +90,7 @@ export const TORSO_OPTIONS = [
   { id: "jacket", label: "Jacket" },
   { id: "armor", label: "Armor" },
   { id: "coat", label: "Coat" },
+  { id: "vest", label: "Vest" },
 ] as const;
 
 export const ARM_OPTIONS = [
@@ -110,6 +111,7 @@ export const ACCESSORIES = [
   { id: "shield", label: "Shield" },
   { id: "staff", label: "Staff" },
   { id: "satchel", label: "Satchel" },
+  { id: "lantern", label: "Lantern" },
 ] as const;
 
 export const BACKGROUNDS = [
@@ -118,6 +120,7 @@ export const BACKGROUNDS = [
   { id: "desert", label: "Desert" },
   { id: "aurora", label: "Aurora" },
   { id: "field", label: "Star field" },
+  { id: "harbor", label: "Harbor" },
 ] as const;
 
 export const DEFAULT_APPEARANCE: Appearance = {

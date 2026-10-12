@@ -12,12 +12,23 @@ import Base from "../../layouts/Base.astro";
     <p>Entrants would need an age rule, a ban on copying another person’s art, and a ban on using the LEGO Group’s logos, minifigure designs, or other protected characters. Brick Legends art has to stay original.</p>
     <h2>Moderation</h2>
     <p>Public cards need a report button, a review queue, and a way to remove abusive or infringing work. That cannot be done honestly with browser-only storage.</p>
+    <h2>Ranking methodology</h2>
+    <p>Nothing below is scoring live cards. The method will be published before any result is shown, and a result will not be revised in private.</p>
+    <ul>
+      <li>Algorithmic: the card’s fictional overall, from rarity rule bl-rarity-1. It is printed on the card. It does not set a community rank.</li>
+      <li>Voters: Most Creative, Highest Rated, Community Favorites, Best of the Month, and Best of the Year. An authenticated account would have a published vote limit inside a published period, with one vote per account, character, and period.</li>
+      <li>Judges, labeled as judges: an Annual Five shortlist may discuss originality, design quality, and storytelling in notes shown with the selection.</li>
+      <li>All-Time Legends would add the published vote totals from closed periods. It would not apply a hidden weight.</li>
+    </ul>
     <h2>Voting</h2>
     <p>Votes would be stored on a server, tied to an authenticated account, limited to the published voting window, and protected against simple automation. The ranking formula would be published beside the results. Client-side counters are not used here because anyone could rewrite them.</p>
+    <p>Planned boards are Most Creative, Highest Rated, Community Favorites, Best of the Month, Best of the Year, and All-Time Legends. A character’s fictional Power score does not place it on those boards. Community rank comes from eligible votes in a defined period. A later editorial pick, if any, would be labeled as a judge’s choice and kept separate from the vote total.</p>
+    <h2>Commercial consent</h2>
+    <p>A character can be considered for a physical card only after the creator, in a separate step, agrees to attribution, a one-edition production license, and the auction terms. Publishing a digital card would not include that permission. Revenue sharing, eligibility, and privacy terms need legal review before any auction. None of those terms are in force.</p>
     <h2>Auctions</h2>
     <p>The five physical cards, once they exist, should be sold through an established auction house or marketplace rather than a custom checkout on this static site. Candidates to evaluate later include eBay auctions, Heritage Auctions, Goldin, and Catawiki. The site would then record only a verified result: the house, the date, the lot URL, the currency, and the price. No partnership with those companies is claimed.</p>
     <h2>Privacy and hosting</h2>
-    <p>GitHub Pages can publish this site. It cannot host private accounts or a trustworthy vote. A later backend would need its own security review. Possible shapes include a hosted Postgres database and a small authenticated API. No secrets belong in the static JavaScript.</p>
+    <p>GitHub Pages can publish this site. It cannot host private accounts or a trustworthy vote. The recommended next backend, once you approve a provider, is Supabase: authentication, Postgres, file storage, and row-level security, called from this static site. Firebase and Cloudflare Workers with D1 are the alternatives compared in the repository note on Brick Legends. No project has been created, and no secret belongs in the static JavaScript.</p>
     <h2>What works today</h2>
     <p>The creator, the local draft list, the PNG export, the rarity formula, and the labeled demonstration pages.</p>
   </article>

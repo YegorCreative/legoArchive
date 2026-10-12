@@ -1,31 +1,65 @@
 ---
 import Base from "../layouts/Base.astro";
+import { adjustPurchasingPower, cpiSeries, cpiValue, latestCompleteCpiYear } from "../lib/inflation";
+import { href } from "../lib/href";
+import { pricesFor } from "../lib/price-index";
+import { formatMoney } from "../lib/pricing";
+import { loadCatalog } from "../lib/load-catalog";
+
+const catalog = loadCatalog();
+const series = cpiSeries();
+const latest = latestCompleteCpiYear();
+const dollar1999 = adjustPurchasingPower(1, 1999, latest);
+const index1999 = cpiValue(1999);
+const indexLatest = latest == null ? null : cpiValue(latest);
+const verified = catalog.sets.filter((set) => pricesFor(set.id).some((price) => price.verification === "verified"));
 ---
-<Base title="Price archive" description="The foundation for comparing original LEGO retail prices with later market observations.">
+<Base title="Price archive" description="Original retail, market estimates, and US purchasing power stay in separate fields.">
   <p class="eyebrow">Price archive</p>
-  <h1 class="lede">What it cost, and what it might be worth</h1>
-  <p class="deck">Phase 1 keeps the shelves ready and refuses to invent prices. A comparison appears only when a record stores both an original retail observation and a later market observation.</p>
-  <div class="price-grid" style="grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));">
+  <h1 class="lede">Prices stay separate until they are verified</h1>
+  <p class="deck">Original retail, a sealed-market estimate, a used-market estimate, and an inflation adjustment are four different ideas. This page does not merge them into one number, and it does not rank sets while coverage is empty.</p>
+
+  <div class="stats">
+    <article class="stat"><b>{verified.length}</b><span>Sets with a verified price</span></article>
+    <article class="stat"><b>{series.observations.length}</b><span>Complete CPI-U years stored</span></article>
+    <article class="stat"><b>{latest ?? "—"}</b><span>Latest complete index year</span></article>
+  </div>
+
+  <section class="price-grid" style="grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));">
     <article class="panel">
       <h2>Original retail</h2>
       <p>Unavailable</p>
-      <p class="quiet">Needs amount, currency, market, source, and verification status.</p>
+      <p class="quiet">A verified MSRP needs the set number, amount, currency, market, source, observation date, and a status of verified. A sale price from a retailer is not recorded as the original price.</p>
     </article>
     <article class="panel">
-      <h2>Current estimate</h2>
+      <h2>Sealed market estimate</h2>
       <p>Unavailable</p>
-      <p class="quiet">New and used values are separate. An estimate is not a guaranteed selling price.</p>
+      <p class="quiet">No licensed current-market feed is connected. An estimate would be labeled as an estimate and would not be a guaranteed sale price.</p>
     </article>
-  </div>
-  <section class="panel">
-    <h2>Price history</h2>
-    <p>A line is drawn only when at least two dated observations exist. An original price and a single current estimate do not become a curve with invented years in between.</p>
-    <p class="quiet">No set in this snapshot has two dated observations, so no chart is shown.</p>
+    <article class="panel">
+      <h2>Used market estimate</h2>
+      <p>Unavailable</p>
+      <p class="quiet">Used and sealed values are stored as different observations. Neither is shown until a dated source exists.</p>
+    </article>
   </section>
+
+  <section class="panel">
+    <h2>Rankings are withheld</h2>
+    <p>Most valuable retired sets, greatest appreciation, highest original retail, and theme or year price boards need verified coverage. With {verified.length} verified set prices in the catalog, any such list would describe the gaps more than the market. No ranking is shown.</p>
+  </section>
+
   <section class="prose">
-    <h2>How a price will be stored</h2>
-    <p>Each observation can record the set, the kind of price (original retail, estimated new, or estimated used), the amount, the currency, the market, the date, the source, and whether it is verified or estimated. USD is the first currency the archive expects. Other currencies can use the same fields later.</p>
-    <p>Inflation adjustments, when a verified original USD price exists, should use a published United States index such as the Bureau of Labor Statistics Consumer Price Index. No index value is applied in this release because there is no verified original price to adjust.</p>
-    <p>Percentage change is calculated only when both amounts exist and the original amount is greater than zero. Unknown prices are never stored or sorted as zero.</p>
+    <h2>US purchasing power</h2>
+    <p>The stored index is {series.seriesName}, series {series.seriesId}, from the {series.source}. Retrieved {series.retrievedAt}. {series.method}</p>
+    {latest != null && index1999 != null && indexLatest != null && dollar1999 != null ? (
+      <p>One US dollar in 1999 has the purchasing power of about {formatMoney(dollar1999, "USD")} in {latest} dollars. The 1999 annual index is {index1999}. The {latest} annual index is {indexLatest}. That sentence is about the dollar. It is not a LEGO set price.</p>
+    ) : (
+      <p>The purchasing-power example is withheld because a required annual index is missing.</p>
+    )}
+    {series.partialYearsOmitted.length > 0 && (
+      <p>These years were returned with fewer than twelve numeric months and are not used: {series.partialYearsOmitted.map((row) => `${row.year} (${row.months} months)`).join(", ")}. October 2025 is marked unavailable by BLS because of a lapse in appropriations. That month is not estimated.</p>
+    )}
+    <p>A set page will show an inflation-adjusted original price only when that set has a verified US-dollar retail amount whose year is in this series, compared with {latest ?? "a complete year"}. The result is purchasing power, not collectible appreciation. Details are in the repository note <a href="https://github.com/YegorCreative/legoArchive/blob/main/docs/pricing.md">docs/pricing.md</a>.</p>
+    <p><a href={href("sets/7140-1/")}>The 1999 X-wing set page</a> still shows every price field as unavailable.</p>
   </section>
 </Base>
