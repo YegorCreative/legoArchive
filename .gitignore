@@ -4,3 +4,6 @@ dist/
 data/raw/
 .DS_Store
 *.log
+.env
+.env.*
+!.env.example

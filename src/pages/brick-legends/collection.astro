@@ -1,0 +1,33 @@
+---
+import Base from "../../layouts/Base.astro";
+import { href } from "../../lib/href";
+---
+<Base title="Collection" description="Characters saved to a Brick Legends account. These are not financial assets." section="legends">
+  <p class="eyebrow">Collection</p>
+  <h1 class="lede">The shelf in your studio</h1>
+  <p class="deck">Digital cards here are private creative records. They are not NFTs, tokens, or investments. Fictional power, creativity, and defense stay on the card and do not become a community rank.</p>
+  <div id="collection-app" data-create-url={href("brick-legends/create/")}>
+    <p id="collection-status" role="status">Loading the shelf…</p>
+    <section class="panel">
+      <h2>My characters</h2>
+      <div id="my-characters"></div>
+    </section>
+    <section class="panel">
+      <h2>My published cards</h2>
+      <div id="my-published"></div>
+    </section>
+    <section class="panel">
+      <h2>My favorites</h2>
+      <div id="my-favorites"></div>
+    </section>
+    <section class="panel">
+      <h2>My achievements</h2>
+      <div id="my-awards"></div>
+    </section>
+  </div>
+</Base>
+<script>
+  import { mountCollection } from "../../scripts/collection-page";
+  const root = document.querySelector("#collection-app");
+  if (root instanceof HTMLElement) mountCollection(root);
+</script>

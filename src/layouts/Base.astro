@@ -50,9 +50,12 @@ const canonical = new URL(path, Astro.site);
       <nav class="shell site-nav legend-nav" aria-label="Brick Legends">
         <a href={href("brick-legends/")}>Overview</a>
         <a href={href("brick-legends/create/")}>Create</a>
-        <a href={href("brick-legends/rankings/")}>Rankings</a>
+        <a href={href("brick-legends/gallery/")}>Gallery</a>
+        <a href={href("brick-legends/collection/")}>Collection</a>
         <a href={href("brick-legends/creators/")}>Creators</a>
+        <a href={href("brick-legends/rankings/")}>Rankings</a>
         <a href={href("brick-legends/annual-five/")}>Annual Five</a>
+        <a href={href("brick-legends/account/")}>Account</a>
         <a href={href("brick-legends/policies/")}>Policies</a>
       </nav>
     )}
@@ -66,6 +69,8 @@ const canonical = new URL(path, Astro.site);
       <nav aria-label="Footer">
         <a href={href("about/")}>About and sources</a>
         <a href={href("brick-legends/policies/")}>Brick Legends policies</a>
+        <a href={href("brick-legends/privacy/")}>Privacy draft</a>
+        <a href={href("brick-legends/guidelines/")}>Community guidelines</a>
         <a href="https://github.com/YegorCreative/legoArchive">GitHub</a>
       </nav>
     </footer>

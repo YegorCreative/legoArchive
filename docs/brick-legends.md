@@ -16,6 +16,8 @@ GitHub Pages cannot safely host accounts, public galleries, votes, reports, or p
 
 Before a public launch, the project still needs creator terms, a commercial license for any selected design, eligibility and age rules, originality rules, moderation, a server-side vote with abuse controls, a privacy notice, and an intellectual-property review. Auctions of physical cards should go through an outside house. Platforms worth evaluating later: eBay, Heritage Auctions, Goldin, and Catawiki. None of them is a partner of this site.
 
+Account setup, the SQL migration, and the locked gallery are described in [community.md](community.md).
+
 ## Backend recommendation
 
 GitHub Pages stays the public site. Accounts, card files, votes, and moderation need a separate service. Nothing below is provisioned.

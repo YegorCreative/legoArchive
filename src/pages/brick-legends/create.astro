@@ -34,7 +34,7 @@ const groups = [
 <Base title="Character creator" description="Design an original Brick Legends character on this device." section="legends">
   <p class="eyebrow">Studio</p>
   <h1 class="lede">Character creator</h1>
-  <p class="deck">The preview updates as you choose. Saving keeps a draft in this browser’s local storage. It does not create an account, a public card number, or a vote.</p>
+  <p class="deck">The preview updates as you choose. Saving keeps a draft in this browser’s local storage. It does not create an account, a public card number, or a vote. A signed-in cloud save is separate and still private.</p>
   <div class="creator" id="creator">
     <form>
       <label>Character name<input name="name" required maxlength="64" value="Captain Brickstorm" /></label>
@@ -130,15 +130,23 @@ const groups = [
       <p class="quiet">Exports are 1500 by 2100 pixels, a 600 DPI starting point for a 2.5 by 3.5 inch card. They are not a print order.</p>
       <h2>Drafts on this browser</h2>
       <div id="drafts" class="drafts"></div>
+      <section id="cloud-studio" class="panel">
+        <h2>Cloud library</h2>
+        <p>Local drafts stay on this browser until you choose to remove them. Cloud saving stores the character fields, not a PNG for every draft.</p>
+      </section>
     </div>
   </div>
   <noscript><p class="notice">The live preview and PNG export need JavaScript. Nothing is uploaded either way.</p></noscript>
 </Base>
 <script>
+  import { mountCloudStudio } from "../../scripts/creator-cloud";
   import { mountCreator } from "../../scripts/creator";
   const root = document.querySelector("#creator");
   const flip = document.querySelector("#flip-card");
+  const cloud = document.querySelector("#cloud-studio");
+  const form = root?.querySelector("form");
   if (root instanceof HTMLElement) mountCreator(root);
+  if (cloud instanceof HTMLElement && form instanceof HTMLFormElement) mountCloudStudio(cloud, form);
   flip?.addEventListener("click", () => {
     if (!(flip instanceof HTMLButtonElement)) return;
     const back = flip.classList.toggle("is-back");

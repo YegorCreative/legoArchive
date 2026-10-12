@@ -251,6 +251,8 @@ body[data-section="legends"] .year-list a, body[data-section="legends"] .chip { 
 
 .filters { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); align-items: end; }
 label { display: grid; gap: 0.3rem; font-size: 0.92rem; }
+.form-stack { display: grid; gap: 0.85rem; max-width: 40rem; }
+.form-stack .facts, .form-stack .pager { max-width: none; }
 input, select, textarea {
   width: 100%;
   min-height: 44px;
@@ -260,6 +262,8 @@ input, select, textarea {
   padding: 0.45rem 0.7rem;
 }
 textarea { min-height: 7rem; }
+label.check { display: flex; align-items: center; gap: 0.6rem; }
+label.check input { width: 1.15rem; min-height: 1.15rem; }
 fieldset { border: 1px solid var(--line); border-radius: var(--radius); margin: 0; }
 .pager { display: flex; gap: 0.6rem; align-items: center; }
 .pager button, .button, button.primary {

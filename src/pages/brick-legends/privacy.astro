@@ -1,0 +1,22 @@
+---
+import Base from "../../layouts/Base.astro";
+---
+<Base title="Privacy draft" description="A draft privacy note for Brick Legends accounts. It is not a legal review." section="legends">
+  <article class="prose">
+    <p class="eyebrow">Draft · not legally approved</p>
+    <h1 class="lede">Privacy</h1>
+    <p>This page is a product draft. It is not legal advice and it has not had a legal review. Public accounts stay off until the Supabase project is configured with the rules below.</p>
+    <h2>What would be collected</h2>
+    <p>An account needs an email address and a password, or a Google or Apple identifier if those providers are later enabled. The public profile stores a username, display name, biography, and join date. Character records store the studio fields: name, biography, appearance, abilities, fictional statistics, rarity, and the rarity-rule version. The public profile does not include the email address.</p>
+    <h2>What stays on the device</h2>
+    <p>Local drafts remain in this browser under a local storage key. Signing in does not delete them. A PNG export is created in the browser and is not uploaded with a private draft.</p>
+    <h2>Who can see it</h2>
+    <p>Private characters are readable by their owner. A public gallery would show a character only after moderation marks a published card. Votes, when they eventually exist, would not be a public dump of who voted for whom. Reports are visible to the reporter and to moderators, not to the gallery.</p>
+    <h2>How long it is kept</h2>
+    <p>Account data stays until the creator deletes the profile and characters, or until the project owner deletes the Supabase user. Deleting creator data from this site removes the profile and the rows that belong to it. The login email remains in Supabase Auth until that auth user is removed from the project. Local drafts remain until the creator deletes them in the browser.</p>
+    <h2>Age</h2>
+    <p>The account form asks the person to confirm they are 13 or older. The service is not directed at children under 13. A checkbox is not a full age-verification program, and child-safety duties still need a proper review before public launch.</p>
+    <h2>Deletion</h2>
+    <p>A signed-in creator can delete the profile and characters from the account page by typing DELETE. That request is enforced in the database for the signed-in user only. It does not delete another creator’s work.</p>
+  </article>
+</Base>

@@ -1,0 +1,35 @@
+---
+import Base from "../../layouts/Base.astro";
+import { RARITY_LEVELS } from "../../lib/rarity";
+---
+<Base title="Gallery" description="Published Brick Legends cards. Private drafts are not listed." section="legends">
+  <p class="eyebrow">Gallery</p>
+  <h1 class="lede">Published cards only</h1>
+  <p class="deck">A character moves from private draft to submitted, then to review, and only then to published. Rejected and removed are the other outcomes. Nobody can skip review by editing their own row. Review is closed, so this gallery has nothing to show until a moderator process exists.</p>
+  <p id="gallery-status" role="status">Publication review is closed.</p>
+  <form id="gallery-form" class="filters">
+    <label>Sort
+      <select name="sort">
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="name">Character name</option>
+        <option value="popular" disabled>Community popularity (not available)</option>
+      </select>
+    </label>
+    <label>Rarity
+      <select name="rarity">
+        <option value="">Any</option>
+        {RARITY_LEVELS.map((level) => <option value={level}>{level}</option>)}
+      </select>
+    </label>
+    <label>Name<input name="name" type="search" maxlength="64" /></label>
+    <button type="submit">Apply</button>
+  </form>
+  <div id="gallery-results" class="card-grid"></div>
+  <div id="gallery-pager" class="pager"></div>
+</Base>
+<script>
+  import { mountGallery } from "../../scripts/gallery-page";
+  const root = document.querySelector("main");
+  if (root instanceof HTMLElement) mountGallery(root);
+</script>

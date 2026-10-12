@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
+import { href } from "../../lib/href";
 ---
 <Base title="Brick Legends policies" description="Draft requirements before Brick Legends can accept public work or hold an auction." section="legends">
   <article class="prose">
@@ -29,6 +30,8 @@ import Base from "../../layouts/Base.astro";
     <p>The five physical cards, once they exist, should be sold through an established auction house or marketplace rather than a custom checkout on this static site. Candidates to evaluate later include eBay auctions, Heritage Auctions, Goldin, and Catawiki. The site would then record only a verified result: the house, the date, the lot URL, the currency, and the price. No partnership with those companies is claimed.</p>
     <h2>Privacy and hosting</h2>
     <p>GitHub Pages can publish this site. It cannot host private accounts or a trustworthy vote. The recommended next backend, once you approve a provider, is Supabase: authentication, Postgres, file storage, and row-level security, called from this static site. Firebase and Cloudflare Workers with D1 are the alternatives compared in the repository note on Brick Legends. No project has been created, and no secret belongs in the static JavaScript.</p>
+    <h2>Privacy and guidelines</h2>
+    <p>The <a href={href("brick-legends/privacy/")}>privacy draft</a> and <a href={href("brick-legends/guidelines/")}>community guidelines</a> describe the intended rules. Neither page is a legal approval, and public accounts are not open in the current build.</p>
     <h2>What works today</h2>
     <p>The creator, the local draft list, the PNG export, the rarity formula, and the labeled demonstration pages.</p>
   </article>

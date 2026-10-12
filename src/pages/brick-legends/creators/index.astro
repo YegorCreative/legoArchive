@@ -8,7 +8,12 @@ const studioCount = DEMO_CHARACTERS.filter((character) => character.creator === 
 <Base title="Creator profiles" description="Demonstration creator profiles. These are not registered accounts." section="legends">
   <p class="eyebrow">Demonstration</p>
   <h1 class="lede">Creator profiles</h1>
-  <p class="notice">No one can sign in yet. The profile below is a labeled sample tied to the fictional Archive Studio cards. Community rank, follower counts, and awards are not recorded.</p>
+  <p class="notice">Registered profiles use this page with a query, for example <code>?u=brickmaster2027</code>. That address returns this existing page. A made-up path such as <code>/creators/brickmaster2027/</code> is not generated and will not be treated as a profile. Archive Studio below is still a demonstration, not an account.</p>
+  <section id="profile-viewer" class="panel">
+    <h2>Public profile</h2>
+    <p id="profile-status" role="status">Add ?u=username to this address.</p>
+    <div id="profile-result"></div>
+  </section>
   <div class="card-grid">
     <a class="theme-tile" href={href("brick-legends/creators/archive-studio/")}>
       <p class="eyebrow">Sample profile</p>
@@ -17,4 +22,9 @@ const studioCount = DEMO_CHARACTERS.filter((character) => character.creator === 
       <p class="quiet">Community ranking: not recorded</p>
     </a>
   </div>
+  <script>
+    import { mountProfileViewer } from "../../../scripts/profile-page";
+    const root = document.querySelector("#profile-viewer");
+    if (root instanceof HTMLElement) mountProfileViewer(root);
+  </script>
 </Base>

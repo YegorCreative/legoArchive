@@ -28,7 +28,7 @@ Prices are not invented. Unknown piece counts are not treated as zero.
 
 ## Brick Legends
 
-See [docs/brick-legends.md](docs/brick-legends.md). Drafts stay in the browser. Demonstration rankings are not real votes.
+See [docs/brick-legends.md](docs/brick-legends.md). Drafts stay in the browser. Demonstration rankings are not real votes. Cloud accounts use Supabase only after the project URL and publishable key are supplied. See [docs/community.md](docs/community.md). The service-role key is never part of the site.
 
 ## Security
 

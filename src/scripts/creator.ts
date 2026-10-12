@@ -6,9 +6,10 @@ import {
   type Appearance,
 } from "../lib/character";
 import { renderCardBack, renderCardFront, svgToPng } from "../lib/character-svg";
+import { LOCAL_DRAFT_KEY } from "../lib/community";
 import { RARITY_RULE_VERSION, rateCharacter, type Rarity } from "../lib/rarity";
 
-const STORAGE_KEY = "lego-archive.brick-legends.drafts.v1";
+const STORAGE_KEY = LOCAL_DRAFT_KEY;
 
 interface Draft {
   localId: string;
@@ -52,6 +53,61 @@ function readStats(form: HTMLFormElement): { power: number; creativity: number; 
   const data = new FormData(form);
   const num = (key: string) => Number(data.get(key));
   return { power: num("power"), creativity: num("creativity"), defense: num("defense") };
+}
+
+export function applyToForm(form: HTMLFormElement, draft: {
+  name: string;
+  creator: string;
+  year: number;
+  bio: string;
+  abilities: { name: string; text: string }[];
+  stats: { power: number; creativity: number; defense: number };
+  appearance: Appearance;
+}): void {
+  const assign = (name: string, value: string) => {
+    const field = form.elements.namedItem(name);
+    if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement) field.value = value;
+    if (field instanceof RadioNodeList) {
+      for (const item of field) {
+        if (item instanceof HTMLInputElement) item.checked = item.value === value;
+      }
+    }
+  };
+  assign("name", draft.name);
+  assign("creator", draft.creator);
+  assign("cardYear", String(draft.year));
+  assign("bio", draft.bio);
+  for (let index = 1; index <= 3; index += 1) {
+    const ability = draft.abilities[index - 1];
+    assign(`abilityName${index}`, ability?.name ?? "");
+    assign(`abilityText${index}`, ability?.text ?? "");
+  }
+  assign("power", String(draft.stats.power));
+  assign("creativity", String(draft.stats.creativity));
+  assign("defense", String(draft.stats.defense));
+  for (const [key, value] of Object.entries(draft.appearance)) assign(key, value);
+  form.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+export function snapshotFromForm(form: HTMLFormElement): Omit<Draft, "localId" | "publication" | "savedAt"> | null {
+  const rated = rateCharacter(readStats(form));
+  if (!rated) return null;
+  const data = new FormData(form);
+  return {
+    name: String(data.get("name") || "Untitled").slice(0, 64),
+    creator: String(data.get("creator") || "Anonymous").slice(0, 64),
+    year: Number(data.get("cardYear") || new Date().getFullYear()),
+    bio: String(data.get("bio") || "").slice(0, 600),
+    abilities: [1, 2, 3].map((index) => ({
+      name: String(data.get(`abilityName${index}`) || "").trim(),
+      text: String(data.get(`abilityText${index}`) || "").trim(),
+    })).filter((ability) => ability.name || ability.text),
+    stats: readStats(form),
+    overall: rated.overall,
+    rarity: rated.rarity,
+    ruleVersion: RARITY_RULE_VERSION,
+    appearance: readAppearance(form),
+  };
 }
 
 function loadDrafts(): Draft[] {
@@ -130,28 +186,7 @@ export function mountCreator(root: HTMLElement): void {
       load.type = "button";
       load.textContent = `Load ${draft.name}`;
       load.addEventListener("click", () => {
-        const assign = (name: string, value: string) => {
-          const field = form.elements.namedItem(name);
-          if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement) field.value = value;
-          if (field instanceof RadioNodeList) {
-            for (const item of field) {
-              if (item instanceof HTMLInputElement) item.checked = item.value === value;
-            }
-          }
-        };
-        assign("name", draft.name);
-        assign("creator", draft.creator);
-        assign("cardYear", String(draft.year));
-        assign("bio", draft.bio);
-        for (let index = 1; index <= 3; index += 1) {
-          const ability = draft.abilities[index - 1];
-          assign(`abilityName${index}`, ability?.name ?? "");
-          assign(`abilityText${index}`, ability?.text ?? "");
-        }
-        assign("power", String(draft.stats.power));
-        assign("creativity", String(draft.stats.creativity));
-        assign("defense", String(draft.stats.defense));
-        for (const [key, value] of Object.entries(draft.appearance)) assign(key, value);
+        applyToForm(form, draft);
         paint();
       });
       const remove = document.createElement("button");
@@ -169,24 +204,11 @@ export function mountCreator(root: HTMLElement): void {
   form.addEventListener("input", paint);
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const rated = rateCharacter(readStats(form));
-    if (!rated) return;
-    const data = new FormData(form);
+    const snapshot = snapshotFromForm(form);
+    if (!snapshot) return;
     const draft: Draft = {
       localId: `BL-DRAFT-${Date.now().toString(36)}`,
-      name: String(data.get("name") || "Untitled").slice(0, 64),
-      creator: String(data.get("creator") || "Anonymous").slice(0, 64),
-      year: Number(data.get("cardYear") || new Date().getFullYear()),
-      bio: String(data.get("bio") || "").slice(0, 600),
-      abilities: [1, 2, 3].map((index) => ({
-        name: String(data.get(`abilityName${index}`) || "").trim(),
-        text: String(data.get(`abilityText${index}`) || "").trim(),
-      })).filter((ability) => ability.name || ability.text),
-      stats: readStats(form),
-      overall: rated.overall,
-      rarity: rated.rarity,
-      ruleVersion: RARITY_RULE_VERSION,
-      appearance: readAppearance(form),
+      ...snapshot,
       publication: "local-draft",
       savedAt: new Date().toISOString(),
     };

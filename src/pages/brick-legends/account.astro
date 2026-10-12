@@ -1,0 +1,89 @@
+---
+import Base from "../../layouts/Base.astro";
+import { href } from "../../lib/href";
+---
+<Base title="Account" description="Sign in to a Brick Legends creator account. Email is not shown on public profiles." section="legends">
+  <p class="eyebrow">Account</p>
+  <h1 class="lede">Your studio key</h1>
+  <p class="deck">Email registration is the first method. Google and Apple are prepared and stay inactive until those providers are turned on in Supabase. Creating an account does not publish a card or cast a vote.</p>
+  <div id="account-app" data-base={import.meta.env.BASE_URL} data-account-url={href("brick-legends/account/")}>
+    <p id="account-status" role="status">Checking whether accounts are connected…</p>
+    <section id="account-offline" class="panel form-stack">
+      <h2>Accounts are not connected</h2>
+      <p>This static site has no Supabase URL or publishable key in the build. Local drafts, card export, and the encyclopedia keep working.</p>
+      <p>The setup steps, including the two GitHub Actions secrets and the SQL migration, are in <a href="https://github.com/YegorCreative/legoArchive/blob/main/docs/community.md">docs/community.md</a>. Do not put the service-role key in the site.</p>
+    </section>
+    <section id="account-signed-out" class="form-stack" hidden>
+      <form id="signup-form" class="panel form-stack">
+        <h2>Create an account</h2>
+        <label>Email<input name="email" type="email" autocomplete="email" required /></label>
+        <label>Password<input name="password" type="password" autocomplete="new-password" minlength="8" required /></label>
+        <label class="check"><input name="age" type="checkbox" value="yes" /> I am 13 or older.</label>
+        <button class="primary" type="submit">Create account</button>
+      </form>
+      <form id="signin-form" class="panel form-stack">
+        <h2>Sign in</h2>
+        <label>Email<input name="email" type="email" autocomplete="email" required /></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required /></label>
+        <button class="primary" type="submit">Sign in</button>
+      </form>
+      <form id="reset-form" class="panel form-stack">
+        <h2>Reset password</h2>
+        <label>Email<input name="email" type="email" autocomplete="email" required /></label>
+        <button type="submit">Send reset message</button>
+      </form>
+      <div class="pager">
+        <button id="google-sign-in" type="button">Continue with Google</button>
+        <button id="apple-sign-in" type="button">Continue with Apple</button>
+      </div>
+      <p class="quiet">Google and Apple succeed only after those providers are enabled in the Supabase project. A click that is not configured returns an error. Neither method is claimed to work in this deployment.</p>
+    </section>
+    <section id="account-recovery" class="panel form-stack" hidden>
+      <h2>New password</h2>
+      <form id="new-password-form" class="form-stack">
+        <label>Password<input name="password" type="password" autocomplete="new-password" minlength="8" required /></label>
+        <button class="primary" type="submit">Update password</button>
+      </form>
+    </section>
+    <section id="account-claim" class="panel form-stack" hidden>
+      <h2>Claim a username</h2>
+      <p>The public address will be this site’s creators page with <code>?u=your-name</code>. That page already exists, so the link returns HTTP 200. A path such as <code>/creators/your-name/</code> is not generated for every account.</p>
+      <form id="claim-form" class="form-stack">
+        <label>Username<input name="username" required minlength="3" maxlength="32" autocomplete="username" /></label>
+        <label>Display name<input name="display_name" required maxlength="64" /></label>
+        <label>Biography<textarea name="biography" maxlength="600"></textarea></label>
+        <label class="check"><input name="age" type="checkbox" value="yes" /> I am 13 or older.</label>
+        <button class="primary" type="submit">Save profile</button>
+      </form>
+    </section>
+    <section id="account-ready" class="form-stack" hidden>
+      <dl class="facts">
+        <div><dt>Username</dt><dd id="username-readout">—</dd></div>
+        <div><dt>Joined</dt><dd id="joined">—</dd></div>
+        <div><dt>Shareable profile</dt><dd id="share-url">—</dd></div>
+      </dl>
+      <form id="profile-form" class="panel form-stack">
+        <h2>Edit profile</h2>
+        <label>Display name<input name="display_name" required maxlength="64" /></label>
+        <label>Biography<textarea name="biography" maxlength="600"></textarea></label>
+        <button class="primary" type="submit">Save profile</button>
+      </form>
+      <p class="quiet">Avatar upload is closed. Awards cannot be edited here. Another creator’s profile is not writable from this session.</p>
+      <div class="pager">
+        <a class="button" href={href("brick-legends/collection/")}>My collection</a>
+        <button id="sign-out" type="button">Sign out</button>
+      </div>
+      <form id="delete-form" class="panel form-stack">
+        <h2>Delete creator data</h2>
+        <p>This removes the profile, characters, and related rows. It does not delete the login email from Supabase, and it does not delete local drafts.</p>
+        <label>Type DELETE<input name="confirm" autocomplete="off" /></label>
+        <button type="submit">Delete my profile and characters</button>
+      </form>
+    </section>
+  </div>
+</Base>
+<script>
+  import { mountAccount } from "../../scripts/account-page";
+  const root = document.querySelector("#account-app");
+  if (root instanceof HTMLElement) mountAccount(root);
+</script>
