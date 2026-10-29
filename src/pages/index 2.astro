@@ -1,0 +1,268 @@
+---
+import Base from "../layouts/Base.astro";
+import DisplayStand from "../components/build/DisplayStand.astro";
+import IsoScene from "../components/build/IsoScene.astro";
+import MuseumGate from "../components/build/MuseumGate.astro";
+import SpaceRocket from "../components/build/SpaceRocket.astro";
+import { decadeHighlights, decadeOf, groupByRootTheme, imageUrl, largestSet, pieceStats, rootTheme, setsInYear } from "../lib/catalog";
+import { galleryTitle } from "../lib/exhibits";
+import { formatCount } from "../lib/format";
+import { href } from "../lib/href";
+import { loadCatalog } from "../lib/load-catalog";
+import { allPrices } from "../lib/price-index";
+
+const catalog = loadCatalog();
+const pieces = pieceStats(catalog.sets);
+const highlights = decadeHighlights(catalog);
+const counts = new Map<string, number>();
+for (const set of catalog.sets) {
+  const root = rootTheme(set.themeId, catalog.themeById);
+  if (root) counts.set(root.id, (counts.get(root.id) ?? 0) + 1);
+}
+const decadeCounts = new Map<number, number>();
+for (const set of catalog.sets) {
+  decadeCounts.set(decadeOf(set.year), (decadeCounts.get(decadeOf(set.year)) ?? 0) + 1);
+}
+const maxDecade = Math.max(...decadeCounts.values());
+const first = catalog.years[0];
+const last = catalog.years[catalog.years.length - 1];
+const shopPrices = allPrices().filter((price) => price.kind === "mail-order" && price.verification === "verified").length;
+const yearIndex = Math.max(0, catalog.years.indexOf(1999));
+const sets1999 = setsInYear(catalog, 1999);
+const themes1999 = groupByRootTheme(sets1999, catalog);
+const orbit = ["star-wars", "town", "castle", "space", "technic", "pirates"].flatMap((slug) => {
+  const group = themes1999.find((item) => item.theme.slug === slug);
+  if (!group) return [];
+  const set = largestSet(group.sets);
+  if (!set) return [];
+  return [{ theme: group.theme, set, count: group.sets.length }];
+});
+const worlds = [
+  { slug: "star-wars", size: "wide", plate: "#0c2e6b", ink: "#ffe56a" },
+  { slug: "castle", size: "mid", plate: "#6a4424", ink: "#ffe7b8" },
+  { slug: "space", size: "mid", plate: "#163e78", ink: "#d9f6ff" },
+  { slug: "town", size: "small", plate: "#ffd500", ink: "#1a1400" },
+  { slug: "city", size: "small", plate: "#0072ce", ink: "#ffffff" },
+  { slug: "technic", size: "small", plate: "#242424", ink: "#ffd500" },
+  { slug: "pirates", size: "small", plate: "#0d6b58", ink: "#ffffff" },
+  { slug: "duplo", size: "banner", plate: "#e3000b", ink: "#ffffff" },
+].flatMap((item) => {
+  const theme = catalog.themeBySlug.get(item.slug);
+  return theme ? [{ ...item, theme, count: counts.get(theme.id) ?? 0 }] : [];
+});
+const spaceShows = [
+  { id: "497-1", note: "1979. Among the earliest Space sets in this snapshot." },
+  { id: "70709-1", note: "2013. Largest recorded Space build in this snapshot, by piece count." },
+  { id: "7066-1", note: "2011. Earth Defense HQ, the second-largest recorded Space build here." },
+].flatMap((item) => {
+  const set = catalog.setById.get(item.id);
+  return set ? [{ ...item, set }] : [];
+});
+---
+<Base title="LEGO Archive" description="An unofficial museum of LEGO sets, organized by year, theme, and story.">
+  <div class="play-floor">
+    <section class="yard" data-parallax data-scene>
+      <div class="yard-copy">
+        <p class="eyebrow yard-kicker">Unofficial digital museum</p>
+        <h1>LEGO<br />ARCHIVE</h1>
+        <p class="tagline">Every LEGO Set. Every Year. Every Story.</p>
+        <p class="yard-note">A play floor for the Rebrickable snapshot of {catalog.snapshot.retrievedAt.slice(0, 10)}: {formatCount(catalog.snapshot.setCount)} records across {catalog.years.length} years. It is not a claim that every set ever made is already here.</p>
+        <div class="yard-actions">
+          <a class="brick-btn" href="#year-1999">Drop into 1999</a>
+          <a class="brick-btn blue" href={href("timeline/")}>Travel the decades</a>
+          <button type="button" class="brick-btn ink" data-rebuild="gate-model">Rebuild the gate</button>
+        </div>
+      </div>
+      <div class="build-stage">
+        <MuseumGate />
+        <button type="button" class="loose-fact" data-loose aria-expanded="false" aria-controls="snapshot-fact">
+          <IsoScene class="iso-still" bricks={[{ x: 0, y: 0, z: 0, w: 2, d: 1, h: 0.72, color: "#e3000b" }]} />
+          <span class="sr">Loose brick. Show a fact from this snapshot.</span>
+        </button>
+        <p id="snapshot-fact" class="fact-pop" hidden>Earliest year recorded in this snapshot: {first}. Latest recorded year: {last}. The entrance beside this brick is original geometry, not a set from the catalog.</p>
+      </div>
+    </section>
+
+    <div class="explode" data-scene aria-hidden="true">
+      {["#e3000b", "#ffd500", "#0057b8", "#00852d", "#f47b20", "#6b2d8b", "#ffffff", "#e3000b"].map((color, index) => (
+        <span class="stud-brick mini" style={`--c:${color}; --bx:${(index - 3.5) * 36}px`}><span class="stud-row"><i></i><i></i></span></span>
+      ))}
+    </div>
+
+    <section class="space-room" id="space-room" data-parallax data-scene>
+      <div class="starfield" aria-hidden="true"></div>
+      <div class="space-layout">
+        <div class="space-copy">
+          <p class="eyebrow on-dark">Space exhibition</p>
+          <h2>A launch pad, built on the plate</h2>
+          <p>The pad, gantry, rocket, and rover are original geometry. The three sets below are real Space records from the snapshot: an early Classic Space set, and the two largest Space builds by piece count. This is not a ranking of the most famous sets.</p>
+          <a class="brick-btn" href={href("themes/space/")}>Enter the Space theme</a>
+          <button type="button" class="brick-btn ink" data-rebuild="rocket-model">Rebuild the rocket</button>
+        </div>
+        <SpaceRocket />
+      </div>
+      <div class="stand-row">
+        {spaceShows.map((item) => (
+          <a class="stand-link" href={href(`sets/${item.set.id}/`)}>
+            <DisplayStand label={item.set.name}>
+              <img src={imageUrl(catalog.snapshot, item.set.id)} alt="" width="480" height="360" loading="lazy" decoding="async" />
+            </DisplayStand>
+            <span class="stand-note">{item.note} {item.set.parts == null ? "Piece count unavailable." : `${formatCount(item.set.parts)} pieces.`}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="year-stage" id="year-1999" data-parallax data-scene>
+      <p class="eyebrow on-dark">A year you can walk into</p>
+      <div class="floats">
+        <h2 class="year-giant">1999</h2>
+        {orbit.map((item) => (
+          <a class="float-card" href={href(`sets/${item.set.id}/`)} style={`--dx:${item.theme.slug === "star-wars" ? "18px" : "10px"}; --dy:${item.theme.slug === "space" ? "24px" : "14px"}`}>
+            <img src={imageUrl(catalog.snapshot, item.set.id)} alt="" width="320" height="240" loading="lazy" decoding="async" />
+            <span>
+              <b>{item.theme.name}</b>
+              {item.set.name}
+              <small>{item.set.parts == null ? "Piece count unavailable" : `${formatCount(item.set.parts)} pieces`} · {formatCount(item.count)} sets in this root</small>
+            </span>
+          </a>
+        ))}
+      </div>
+      <p class="stage-note">{formatCount(sets1999.length)} sets in this snapshot are dated 1999, across {formatCount(themes1999.length)} root themes. The models around the year are the largest recorded build in that root, not a fame ranking. Gallery titles elsewhere are editorial labels.</p>
+      <nav class="theme-pills" aria-label="1999 root themes">
+        {themes1999.slice(0, 8).map((group) => (
+          <a href={href(`years/1999/${group.theme.slug}/`)}>{group.theme.name} · {formatCount(group.sets.length)}</a>
+        ))}
+      </nav>
+      <form action={href("search/")} method="get" class="console">
+        <label class="sr" for="home-q">Search the archive</label>
+        <input id="home-q" name="q" type="search" placeholder="7140 or X-wing" />
+        <button class="brick-btn" type="submit">Search</button>
+      </form>
+      <div class="console year-console">
+        <label for="year-range">Or pick any catalog year, {first} to {last}</label>
+        <input id="year-range" type="range" min="0" max={catalog.years.length - 1} value={yearIndex} data-years={catalog.years.join(",")} />
+        <a class="brick-btn blue" id="year-go" href={href(`years/${catalog.years[yearIndex]}/`)}>Enter {catalog.years[yearIndex]}</a>
+      </div>
+    </section>
+
+    <section class="floor-block" id="decades">
+      <div class="floor-head">
+        <h2>Decade worlds</h2>
+        <a href={href("timeline/")}>Open the full timeline</a>
+      </div>
+      <p class="deck">Each plate is a color for navigation. “{galleryTitle(1990)}” and the other room titles are labels, not historical classifications. The height of the pile is the snapshot count.</p>
+      <div class="world-track" data-timeline tabindex="0" aria-label="Decades in the snapshot">
+        {[...decadeCounts.entries()].sort((a, b) => a[0] - b[0]).map(([decade, count]) => (
+          <a class="decade-plate" data-decade={decade} href={href(`decades/${decade}/`)}>
+            <span class="pile" style={`--h:${Math.max(0.18, count / maxDecade)}`} aria-hidden="true"></span>
+            <strong>{decade}s</strong>
+            <em>{galleryTitle(decade)}</em>
+            <span>{formatCount(count)} sets</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="floor-block" id="themes">
+      <div class="floor-head">
+        <h2>Pick up a theme</h2>
+        <a href={href("themes/")}>All themes</a>
+      </div>
+      <div class="worlds">
+        {worlds.map((world) => (
+          <a class={`world ${world.size}`} style={`--plate:${world.plate}; --on:${world.ink}`} href={href(`themes/${world.theme.slug}/`)}>
+            <span class="world-studs" aria-hidden="true"></span>
+            <b>{world.theme.name}</b>
+            <span>{formatCount(world.count)} documented sets</span>
+          </a>
+        ))}
+      </div>
+      <p><a class="brick-btn ink" href={href("universe/")}>Open the universe map</a></p>
+    </section>
+
+    <section class="floor-block count-floor" id="numbers" data-scene>
+      <p class="eyebrow">Build counter</p>
+      <p class="count-giant">{formatCount(catalog.snapshot.setCount)}</p>
+      <p class="deck">Documented sets. {formatCount(pieces.known)} of them have a piece count. {catalog.years.length} years are represented. {formatCount(shopPrices)} verified Shop at Home prices are on the shelf. Missing numbers stay missing.</p>
+      <div class="towers" aria-label="Sets per decade">
+        {[...decadeCounts.entries()].sort((a, b) => a[0] - b[0]).map(([decade, count]) => (
+          <a class="tower" href={href(`decades/${decade}/`)}>
+            <span class="tower-bricks" style={`--h:${Math.max(0.15, count / maxDecade)}; --c:${decade === 1990 ? "#6b2d8b" : decade === 1980 ? "#0057b8" : decade === 2000 ? "#f47b20" : "#e3000b"}`}></span>
+            <b>{decade}s</b>
+            <span>{formatCount(count)}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="floor-block" id="legendary">
+      <div class="floor-head">
+        <h2>Largest recorded builds</h2>
+      </div>
+      <p class="deck">One set per decade, chosen only by piece count. This is not a list of the most famous sets.</p>
+      <div class="spotlight" tabindex="0" aria-label="Largest documented set in each decade">
+        {highlights.map(({ decade, set }) => {
+          const root = rootTheme(set.themeId, catalog.themeById);
+          return root ? (
+            <a class="spot-card" href={href(`sets/${set.id}/`)}>
+              <img src={imageUrl(catalog.snapshot, set.id)} alt="" width="480" height="360" loading="lazy" decoding="async" />
+              <span>
+                <b>{decade}s · {root.name}</b>
+                {set.name}
+                <small>{set.parts == null ? "Piece count unavailable" : `${formatCount(set.parts)} pieces`}</small>
+              </span>
+            </a>
+          ) : null;
+        })}
+      </div>
+    </section>
+
+    <section class="floor-block price-play" id="prices">
+      <h2>Two ways to read one catalog price</h2>
+      <div class="price-bricks">
+        <a class="price-brick" href={href("sets/7140-1/")}>
+          <span class="stud-row" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <b>$33.00</b>
+          <span>7140 X-wing Fighter in the Fall 1999 US Shop at Home catalog. The printed price includes regular shipping. It is not store MSRP.</span>
+        </a>
+        <a class="price-brick later" href={href("price-archive/")}>
+          <span class="stud-row" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <b>$62.14</b>
+          <span>What $33 from 1999 could buy in 2024 dollars. Purchasing power, not a collectible value, and not a resale price.</span>
+        </a>
+      </div>
+      <p><a href={href("stories/beginning-of-lego-star-wars/")}>Read the sourced 1999 Star Wars note</a></p>
+    </section>
+
+    <details class="hidden-brick">
+      <summary><span class="mini-brick" aria-hidden="true"></span> A loose brick</summary>
+      <p>Fourteen Fall 1999 US Shop at Home prices are verified in this archive. They include the shipping stated in that catalog. Store MSRP and current market value stay unavailable, and missing prices are never shown as zero.</p>
+    </details>
+
+    <section class="legends-door" id="legends">
+      <p class="eyebrow on-dark">Studio door</p>
+      <h2>Enter Brick Legends</h2>
+      <p>An original character studio. Drafts stay in this browser. Rankings and the Annual Five use labeled demonstration cards. No public voting, accounts, or auctions are open.</p>
+      <a class="brick-btn" href={href("brick-legends/")}>Open the studio</a>
+    </section>
+  </div>
+</Base>
+<script>
+  const range = document.querySelector("#year-range");
+  const go = document.querySelector("#year-go");
+  if (range instanceof HTMLInputElement && go instanceof HTMLAnchorElement) {
+    const years = (range.dataset.years ?? "").split(",").filter(Boolean);
+    const base = go.href.replace(/years\/\d+\/?$/, "");
+    const update = () => {
+      const year = years[Number(range.value)] ?? years[0];
+      go.textContent = `Enter ${year}`;
+      go.href = `${base}years/${year}/`;
+    };
+    range.addEventListener("input", update);
+    update();
+  }
+</script>
+<style>
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
